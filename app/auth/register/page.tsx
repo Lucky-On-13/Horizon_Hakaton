@@ -4,8 +4,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { fullSchema } from '@/server/schema';
+
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { subscribeParents } from '@/server/data'
+
 
 export default function RegisterPage() {
+  // Utilisation de Zod pour la validation
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(fullSchema),
+  })
+
+  
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
@@ -24,27 +36,32 @@ export default function RegisterPage() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+  
+  const onFormSubmit = async (data: {
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone: string;
+    password: string;
+    confirmPassword?: string;
+    role?: string;
+  }) => {
 
-    // Validation basique
-    if (formData.password !== formData.confirmPassword) {
+    if (data.password !== formData.confirmPassword) {
       setError('Les mots de passe ne correspondent pas')
       setLoading(false)
       return
     }
-
-    try {
-      // Simulation d'inscription (à remplacer par une vraie API)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Rediriger vers la page de connexion
+    try{
+      setLoading(true);
+      setError('');
+      await subscribeParents({ ...data, role: formData.role });
+      console.log("Utilisateurs enregistrées avec succès");
       router.push('/auth/login?registered=true')
-    } catch (err) {
+      router.refresh()
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement des utilisateurs", error);
       setError('Une erreur est survenue lors de l\'inscription')
-      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -70,7 +87,7 @@ export default function RegisterPage() {
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onFormSubmit)}>
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
               <p className="text-red-700">{error}</p>
@@ -83,7 +100,7 @@ export default function RegisterPage() {
                 <label htmlFor="nom" className="sr-only">Nom</label>
                 <input
                   id="nom"
-                  name="nom"
+                  {...register('nom')}
                   type="text"
                   required
                   value={formData.nom}
@@ -96,7 +113,7 @@ export default function RegisterPage() {
                 <label htmlFor="prenom" className="sr-only">Prénom</label>
                 <input
                   id="prenom"
-                  name="prenom"
+                  {...register('prenom')}
                   type="text"
                   required
                   value={formData.prenom}
@@ -111,7 +128,7 @@ export default function RegisterPage() {
               <label htmlFor="email" className="sr-only">Adresse email</label>
               <input
                 id="email"
-                name="email"
+                {...register('email')}
                 type="email"
                 autoComplete="email"
                 required
@@ -126,7 +143,7 @@ export default function RegisterPage() {
               <label htmlFor="telephone" className="sr-only">Téléphone</label>
               <input
                 id="telephone"
-                name="telephone"
+                {...register('telephone')}
                 type="tel"
                 required
                 value={formData.telephone}
@@ -140,8 +157,8 @@ export default function RegisterPage() {
               <label htmlFor="password" className="sr-only">Mot de passe</label>
               <input
                 id="password"
-                name="password"
-                type="password"
+                {...register('password')}
+                type="code"
                 required
                 value={formData.password}
                 onChange={handleChange}
