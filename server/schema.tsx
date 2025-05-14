@@ -19,6 +19,12 @@ export const fullSchema = z.object({
     email: z.string().email({ message: "L'adresse e-mail doit être valide." }),
 });
 
+export const loginSchema = z.object({
+  email: z.string().email({ message: 'Email invalide' }),
+  password: z.string().min(1, 'Mot de passe requis'),
+})
+
+export type connecionInput = z.infer<typeof loginSchema>;
 export type subscribeInput = z.infer<typeof fullSchema>;
 
 export type StepProps = {

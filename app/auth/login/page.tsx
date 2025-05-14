@@ -4,73 +4,49 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { fullSchema, loginSchema } from '@/server/schema'
+import { connectUser } from '@/server/data'
+import { useForm } from 'react-hook-form'
+
 
 export default function LoginPage() {
+  
+     const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema),
+  })
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      // Simulation d'authentification (à remplacer par une vraie API)
-      if (email === 'admin@horizon.org' && password === 'admin123') {
-        // Simuler un délai de chargement
-        await new Promise(resolve => setTimeout(resolve, 1000))
+  const SignIn = async (data: { email: string; nom?: string; prenom?: string; telephone?: string; password: string }) => {
+    
+    if(!data.email || !data.password){
+      setError("Identifiants incorrectes veuillez reesayer");
+      setLoading(false);
+      return; 
+    }
+    try{
+      setLoading(true);
+      await connectUser(data.email, data.password)
+          localStorage.setItem('user', JSON.stringify({
+          nom: data.nom,
+          prenom: data.prenom,
+          email: data.email,
+        }))
+        alert('connexion reussie !!!');
+        router.push('/dashboard')
         
-        // Stocker les informations de l'utilisateur dans localStorage
-        localStorage.setItem('user', JSON.stringify({
-          id: '1',
-          nom: 'Admin',
-          prenom: 'Système',
-          email: 'admin@horizon.org',
-          role: 'admin'
-        }))
-        
-        router.push('/dashboard')
-      } else if (email === 'secretaire@horizon.org' && password === 'secret123') {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        localStorage.setItem('user', JSON.stringify({
-          id: '2',
-          nom: 'Dupont',
-          prenom: 'Marie',
-          email: 'secretaire@horizon.org',
-          role: 'secretaire'
-        }))
-        router.push('/dashboard')
-      } else if (email === 'analyste@horizon.org' && password === 'analyse123') {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        localStorage.setItem('user', JSON.stringify({
-          id: '3',
-          nom: 'Martin',
-          prenom: 'Jean',
-          email: 'analyste@horizon.org',
-          role: 'analyste'
-        }))
-        router.push('/dashboard')
-      } else if (email === 'parent@example.com' && password === 'parent123') {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        localStorage.setItem('user', JSON.stringify({
-          id: '4',
-          nom: 'Parent',
-          prenom: 'Test',
-          email: 'parent@example.com',
-          role: 'parent'
-        }))
-        router.push('/dossiers')
-      } else {
-        setError('Identifiants incorrects')
-      }
-    } catch (err) {
-      setError('Une erreur est survenue lors de la connexion')
-      console.error(err)
-    } finally {
-      setLoading(false)
+    }
+    catch(e){
+            setError('Une erreur est survenue lors de la connexion')
+            console.error(e)
+    }
+    finally{
+        setLoading(false)
     }
   }
 
@@ -94,7 +70,7 @@ export default function LoginPage() {
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(SignIn)}>
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
               <p className="text-red-700">{error}</p>
@@ -106,7 +82,9 @@ export default function LoginPage() {
               <label htmlFor="email" className="sr-only">Adresse email</label>
               <input
                 id="email"
-                name="email"
+                {
+                  ...register('email')
+                }
                 type="email"
                 autoComplete="email"
                 required
@@ -120,7 +98,9 @@ export default function LoginPage() {
               <label htmlFor="password" className="sr-only">Mot de passe</label>
               <input
                 id="password"
-                name="password"
+                {
+                  ...register('password')
+                }
                 type="password"
                 autoComplete="current-password"
                 required

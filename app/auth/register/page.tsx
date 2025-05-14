@@ -8,7 +8,7 @@ import { fullSchema } from '@/server/schema';
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { subscribeParents } from '@/server/data'
+import { subscribeUser } from '@/server/data'
 
 
 export default function RegisterPage() {
@@ -37,7 +37,7 @@ export default function RegisterPage() {
   }
 
   
-  const onFormSubmit = async (data: {
+  const SignUp = async (data: {
     nom: string;
     prenom: string;
     email: string;
@@ -55,7 +55,7 @@ export default function RegisterPage() {
     try{
       setLoading(true);
       setError('');
-      await subscribeParents({ ...data, role: formData.role });
+      await subscribeUser({ ...data, role: formData.role });
       console.log("Utilisateurs enregistrées avec succès");
       router.push('/auth/login?registered=true')
       router.refresh()
@@ -87,7 +87,7 @@ export default function RegisterPage() {
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onFormSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(SignUp)}>
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
               <p className="text-red-700">{error}</p>
