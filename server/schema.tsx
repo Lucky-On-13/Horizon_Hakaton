@@ -24,6 +24,42 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Mot de passe requis'),
 })
 
+
+export const formulaireFhnSchema = z.object({
+  estPH: z.boolean().default(false),
+  repondPourPH: z.boolean().default(false),
+  lienFiliation: z.string(),
+  autreLienFiliation: z.string(),
+
+  // Informations de la personne handicapée
+  sexe: z.string(),
+  trancheAge: z.string(),
+  ageSpecifique: z.string(),
+  ville: z.string(),
+  quartier: z.string(),
+
+  // Type de handicap
+  typeHandicap: z.object({
+    sensoriel: z.object({
+      type: z.boolean().default(false),
+      sousType: z.string()
+    }),
+    physique: z.object({
+      type: z.boolean().default(false),
+      sousType: z.string()
+    }),
+    mental: z.object({
+      type: z.boolean().default(false),
+      sousType: z.string()
+    }),
+    psychique: z.object({
+      type: z.boolean().default(false),
+      sousType: z.string()
+    }),
+  })
+});
+
+export type fhnInput = z.infer<typeof formulaireFhnSchema>;
 export type connecionInput = z.infer<typeof loginSchema>;
 export type subscribeInput = z.infer<typeof fullSchema>;
 

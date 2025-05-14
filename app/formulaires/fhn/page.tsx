@@ -2,7 +2,18 @@
 
 import { useState } from 'react'
 import InputField from '@/components/ui/InputField'
-
+import { formulaireFhnSchema } from '@/server/schema'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectGroup,
+  SelectItem
+} from '@/components/ui/select'
+    
 export default function FHNFormPage() {
   const [formData, setFormData] = useState({
     // Informations du répondant
@@ -71,9 +82,9 @@ export default function FHNFormPage() {
     attentesOuverture: ''
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Données FHN:', formData)
+  const fhnSubmit = async (data: typeof formData) => {
+    // e.preventDefault()
+    console.log('Données FHN:', data)
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -86,15 +97,22 @@ export default function FHNFormPage() {
     }))
   }
 
+  const { register, handleSubmit, control, formState: { errors } } = useForm({
+      resolver: zodResolver(formulaireFhnSchema),
+    })
+
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 min-h-screen pt-24">
+    <div className="">
+    <div>
+      <h1>Salut mon gars</h1>
+    </div>
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-[#006B3F] mb-4">Enquête d'Identification et d'Évaluation</h1>
         <h2 className="text-xl text-[#FF8B7B]">de la prise en charge du handicap</h2>
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-lg border border-[#FFE5A5]">
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit(fhnSubmit)} className="space-y-8">
           {/* Section Identification */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-[#006B3F] border-b border-[#FFE5A5] pb-2">
@@ -105,6 +123,7 @@ export default function FHNFormPage() {
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2">
                   <input
+                  {...register('estPH')}
                     type="checkbox"
                     name="estPH"
                     checked={formData.estPH}
@@ -118,6 +137,7 @@ export default function FHNFormPage() {
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2">
                   <input
+                  {...register('repondPourPH')}
                     type="checkbox"
                     name="repondPourPH"
                     checked={formData.repondPourPH}
@@ -130,7 +150,31 @@ export default function FHNFormPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* <Controller
+            control={control}
+            name="lienFiliation"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger className="w-full border-none bg-[#F7F7F7]">
+                  <SelectValue placeholder="Sélectionner une pièce" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="pere">Père</SelectItem>
+                    <SelectItem value="mere">Mère</SelectItem>
+                    <SelectItem value="tante">
+                      Tante
+                    </SelectItem>
+                    <SelectItem value="autre">
+                      Autre
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            )}
+          /> */}
               <select
+              {...register('lienFiliation')}
                 name="lienFiliation"
                 value={formData.lienFiliation}
                 onChange={handleChange}
@@ -146,6 +190,7 @@ export default function FHNFormPage() {
 
               {formData.lienFiliation === 'autre' && (
                 <InputField
+                {...register('autreLienFiliation')}
                   label="Précisez le lien"
                   name="autreLienFiliation"
                   value={formData.autreLienFiliation}
@@ -166,7 +211,7 @@ export default function FHNFormPage() {
                 <label className="flex items-center space-x-2">
                   <input
                     type="radio"
-                    name="sexe"
+                    {...register('sexe')}
                     value="masculin"
                     checked={formData.sexe === 'masculin'}
                     onChange={handleChange}
@@ -177,7 +222,7 @@ export default function FHNFormPage() {
                 <label className="flex items-center space-x-2">
                   <input
                     type="radio"
-                    name="sexe"
+                    {...register('sexe')}
                     value="feminin"
                     checked={formData.sexe === 'feminin'}
                     onChange={handleChange}
@@ -188,6 +233,7 @@ export default function FHNFormPage() {
               </div>
 
               <select
+              {...register('trancheAge')}
                 name="trancheAge"
                 value={formData.trancheAge}
                 onChange={handleChange}
@@ -203,6 +249,7 @@ export default function FHNFormPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField
+              {...register('ville')}
                 label="Ville/Province"
                 name="ville"
                 value={formData.ville}
@@ -210,6 +257,7 @@ export default function FHNFormPage() {
                 required
               />
               <InputField
+              {...register('quartier')}
                 label="Quartier"
                 name="quartier"
                 value={formData.quartier}

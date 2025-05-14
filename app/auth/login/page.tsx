@@ -38,6 +38,19 @@ export default function LoginPage() {
         prenom: data.prenom,
         email: data.email,
       }))
+      const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    const result = await res.json();
+
+    if (result.success) {
+      router.push('/dashboard') 
+    } else {
+      setError(result.message || 'Identifiants incorrects')
+    }
+      
       alert('connexion reussie !!!');
       router.push('/dashboard')
       }
