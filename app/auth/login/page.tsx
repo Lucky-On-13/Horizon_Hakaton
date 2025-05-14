@@ -31,15 +31,18 @@ export default function LoginPage() {
     }
     try{
       setLoading(true);
-      await connectUser(data.email, data.password)
-          localStorage.setItem('user', JSON.stringify({
-          nom: data.nom,
-          prenom: data.prenom,
-          email: data.email,
-        }))
-        alert('connexion reussie !!!');
-        router.push('/dashboard')
-        
+      const con = await connectUser(data.email, data.password);
+      if(con.user?.password === data.password){
+        localStorage.setItem('user', JSON.stringify({
+        nom: data.nom,
+        prenom: data.prenom,
+        email: data.email,
+      }))
+      alert('connexion reussie !!!');
+      router.push('/dashboard')
+      }
+        setError("Erreur d'identifiants");
+        return;
     }
     catch(e){
             setError('Une erreur est survenue lors de la connexion')
@@ -94,6 +97,7 @@ export default function LoginPage() {
                 placeholder="Adresse email"
               />
             </div>
+            
             <div>
               <label htmlFor="password" className="sr-only">Mot de passe</label>
               <input
@@ -109,9 +113,15 @@ export default function LoginPage() {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F] focus:z-10 sm:text-sm"
                 placeholder="Mot de passe"
               />
+              
             </div>
           </div>
-
+          <p className="mt-1 min-h-7 text-red-500 text-sm">
+                {errors.password?.message}
+              </p>
+              <p className="mt-1 min-h-7 text-red-500 text-sm">
+            {errors.email?.message}
+        </p>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
