@@ -34,7 +34,6 @@ export async function connectUser( email:any, password:any) {
     return { success: false, message: "Mot de passe incorrect" };
   }
 
-  console.log(connectUser('victoirelucngami@gmail.com','Lucngami13'));
   return {
     success: true,
     message: "Connexion réussie",
