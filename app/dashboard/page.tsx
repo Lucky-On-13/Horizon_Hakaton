@@ -1,104 +1,112 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-
-// Types pour les données
-type DossierStatus = 'Nouveau' | 'En cours' | 'Incomplet' | 'Accepté' | 'Rejeté' | 'Clôturé'
+// Types basés sur le schéma Prisma
+type DossierStatus = 'NOUVEAU' | 'EN_COURS' | 'INCOMPLET' | 'ACCEPTE' | 'REJETE' | 'CLOTURE'
 
 type Dossier = {
-  id: string
+  id: number
   nom: string
   prenom: string
-  dateNaissance: string
+  dateNaissance: Date
   statut: DossierStatus
-  dateCreation: string
-  derniereMaj: string
+  dateCreation: Date
+  dateModification: Date
+}
+
+type DashboardStats = {
+  total: number
+  enCours: number
+  acceptes: number
+  enAttente: number
+}
+
+type StatCard = {
+  label: string
+  value: number
+  color: string
 }
 
 export default function DashboardPage() {
-  // Données simulées pour le tableau de bord
-  const stats = [
-    { label: 'Total Dossiers', value: 124, color: 'bg-blue-500' },
-    { label: 'En cours', value: 45, color: 'bg-yellow-500' },
-    { label: 'Acceptés', value: 62, color: 'bg-green-500' },
-    { label: 'En attente', value: 17, color: 'bg-orange-500' }
-  ]
-  
-  // Données simulées pour la liste des dossiers récents
-  const recentDossiers: Dossier[] = [
-    {
-      id: '1',
-      nom: 'Dupont',
-      prenom: 'Marie',
-      dateNaissance: '12/05/2015',
-      statut: 'En cours',
-      dateCreation: '15/03/2023',
-      derniereMaj: '22/03/2023'
-    },
-    {
-      id: '2',
-      nom: 'Martin',
-      prenom: 'Lucas',
-      dateNaissance: '03/11/2016',
-      statut: 'Accepté',
-      dateCreation: '10/03/2023',
-      derniereMaj: '18/03/2023'
-    },
-    {
-      id: '3',
-      nom: 'Petit',
-      prenom: 'Sophie',
-      dateNaissance: '25/07/2017',
-      statut: 'Incomplet',
-      dateCreation: '05/03/2023',
-      derniereMaj: '12/03/2023'
-    },
-    {
-      id: '4',
-      nom: 'Dubois',
-      prenom: 'Thomas',
-      dateNaissance: '14/02/2014',
-      statut: 'Nouveau',
-      dateCreation: '01/03/2023',
-      derniereMaj: '01/03/2023'
-    },
-    {
-      id: '5',
-      nom: 'Leroy',
-      prenom: 'Emma',
-      dateNaissance: '30/09/2018',
-      statut: 'En cours',
-      dateCreation: '28/02/2023',
-      derniereMaj: '10/03/2023'
+  const [dossiers, setDossiers] = useState<Dossier[]>([])
+  const [stats, setStats] = useState<DashboardStats>({
+    total: 0,
+    enCours: 0,
+    acceptes: 0,
+    enAttente: 0
+  })
+  const [statusFilter, setStatusFilter] = useState<DossierStatus | 'TOUS'>('TOUS')
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDossiers = async () => {
+      try {
+        const response = await fetch('/api/dossiers')
+        const data = await response.json()
+        setDossiers(data)
+        
+        // Calculer les statistiques
+        setStats({
+          total: data.length,
+          enCours: data.filter((d: Dossier) => d.statut === 'EN_COURS').length,
+          acceptes: data.filter((d: Dossier) => d.statut === 'ACCEPTE').length,
+          enAttente: data.filter((d: Dossier) => d.statut === 'NOUVEAU').length
+        })
+      } catch (error) {
+        console.error('Erreur lors du chargement des dossiers:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    fetchDossiers()
+  }, [])
+
+  const statsCards: StatCard[] = [
+    { label: 'Total Dossiers', value: stats.total, color: 'bg-blue-500' },
+    { label: 'En cours', value: stats.enCours, color: 'bg-yellow-500' },
+    { label: 'Acceptés', value: stats.acceptes, color: 'bg-green-500' },
+    { label: 'En attente', value: stats.enAttente, color: 'bg-orange-500' }
   ]
-  
-  // État pour le filtrage
-  const [statusFilter, setStatusFilter] = useState<DossierStatus | 'Tous'>('Tous')
-  
-  // Filtrer les dossiers selon le statut sélectionné
-  const filteredDossiers = statusFilter === 'Tous' 
-    ? recentDossiers 
-    : recentDossiers.filter(dossier => dossier.statut === statusFilter)
-  
-  // Fonction pour obtenir la couleur du badge selon le statut
+
+  const statusOptions = ['Tous', 'Nouveau', 'En cours', 'Incomplet', 'Accepté', 'Rejeté', 'Clôturé']
+
+  const filteredDossiers = statusFilter === 'TOUS'
+    ? dossiers
+    : dossiers.filter(dossier => dossier.statut === statusFilter)
+
   const getStatusColor = (status: DossierStatus) => {
-    switch(status) {
-      case 'Nouveau': return 'bg-blue-100 text-blue-800'
-      case 'En cours': return 'bg-yellow-100 text-yellow-800'
-      case 'Incomplet': return 'bg-orange-100 text-orange-800'
-      case 'Accepté': return 'bg-green-100 text-green-800'
-      case 'Rejeté': return 'bg-red-100 text-red-800'
-      case 'Clôturé': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+    const statusColors = {
+      'NOUVEAU': 'bg-blue-100 text-blue-800',
+      'EN_COURS': 'bg-yellow-100 text-yellow-800',
+      'INCOMPLET': 'bg-orange-100 text-orange-800',
+      'ACCEPTE': 'bg-green-100 text-green-800',
+      'REJETE': 'bg-red-100 text-red-800',
+      'CLOTURE': 'bg-gray-100 text-gray-800'
     }
+    return statusColors[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString('fr-FR')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 pb-10 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <p>Chargement...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen pt-24 pb-10 bg-gray-50">
       <div className="container mx-auto px-4">
+        {/* En-tête */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-[#006B3F]">Tableau de bord</h1>
@@ -119,7 +127,7 @@ export default function DashboardPage() {
         
         {/* Statistiques */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+          {statsCards.map((stat, index) => (
             <div key={index} className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex items-center">
                 <div className={`w-12 h-12 rounded-full ${stat.color} flex items-center justify-center text-white`}>
@@ -136,7 +144,7 @@ export default function DashboardPage() {
           ))}
         </div>
         
-        {/* Liste des dossiers récents */}
+        {/* Liste des dossiers */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6 border-b">
             <h2 className="text-xl font-bold text-[#006B3F]">Dossiers récents</h2>
@@ -145,10 +153,10 @@ export default function DashboardPage() {
           {/* Filtres */}
           <div className="p-4 bg-gray-50 border-b">
             <div className="flex flex-wrap gap-2">
-              {['Tous', 'Nouveau', 'En cours', 'Incomplet', 'Accepté', 'Rejeté', 'Clôturé'].map((status) => (
+              {statusOptions.map((status) => (
                 <button
                   key={status}
-                  onClick={() => setStatusFilter(status as DossierStatus | 'Tous')}
+                  onClick={() => setStatusFilter(status as DossierStatus | 'TOUS')}
                   className={`px-3 py-1 rounded-full text-sm ${
                     statusFilter === status 
                       ? 'bg-[#006B3F] text-white' 
@@ -163,61 +171,39 @@ export default function DashboardPage() {
           
           {/* Tableau */}
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nom
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date de naissance
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date de création
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Dernière mise à jour
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prénom</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de naissance</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de création</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dernière mise à jour</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredDossiers.map((dossier) => (
-                  <tr key={dossier.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {dossier.nom} {dossier.prenom}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{dossier.dateNaissance}</div>
-                    </td>
+                  <tr key={dossier.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dossier.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{dossier.nom}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{dossier.prenom}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatDate(dossier.dateNaissance)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(dossier.statut)}`}>
                         {dossier.statut}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {dossier.dateCreation}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {dossier.derniereMaj}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/dossiers/${dossier.id}`} className="text-[#006B3F] hover:text-[#005535] mr-4">
-                        Voir
-                      </Link>
-                      <Link href={`/dossiers/${dossier.id}/edit`} className="text-[#FF8B7B] hover:text-[#FF7B6B]">
-                        Modifier
+                    <td className="px-6 py-4 whitespace-nowrap">{formatDate(dossier.dateCreation)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatDate(dossier.dateModification)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <Link
+                        href={`/dossiers/${dossier.id}`}
+                        className="text-[#006B3F] hover:text-[#005535]"
+                      >
+                        Voir détails
                       </Link>
                     </td>
                   </tr>
@@ -225,12 +211,6 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-          
-          {filteredDossiers.length === 0 && (
-            <div className="p-8 text-center">
-              <p className="text-gray-500">Aucun dossier ne correspond à ce filtre</p>
-            </div>
-          )}
         </div>
       </div>
     </div>

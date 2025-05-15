@@ -3,89 +3,108 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+// Schéma de validation Zod
+const dossierSchema = z.object({
+  nom: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
+  prenom: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
+  dateNaissance: z.string().min(1, 'La date de naissance est requise'),
+  sexe: z.enum(['M', 'F'], { required_error: 'Le sexe est requis' }),
+  commune: z.string().min(2, 'La commune est requise'),
+  parentNom: z.string().min(2, 'Le nom du parent est requis'),
+  parentTelephone: z.string().regex(/^\+?[0-9]{8,}$/, 'Numéro de téléphone invalide'),
+  parentEmail: z.string().email('Email invalide').optional(),
+  diagnostic: z.string().optional(),
+})
+
+type DossierFormData = z.infer<typeof dossierSchema>
 
 export default function CreateDossierPage() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  
-  // État du formulaire
-  const [formData, setFormData] = useState({
-    // Informations de l'enfant
-    nom: '',
-    prenom: '',
-    dateNaissance: '',
-    sexe: '',
-    commune: '',
-    
-    // Informations du parent/tuteur
-    parentNom: '',
-    parentTelephone: '',
-    parentEmail: '',
-    
-    // Informations médicales
-    diagnostic: '',
-    
-    // Fichiers
-    documents: [] as File[]
-  })
-  
-  // Gérer les changements dans le formulaire
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+  const [uploadError, setUploadError] = useState<string>('')
+  const [documents, setDocuments] = useState<File[]>([])
+
+  const removeFile = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index))
   }
-  
-  // Gérer l'upload de fichiers
+
+  const { register, handleSubmit, formState: { errors, isValid }, trigger } = useForm<DossierFormData>({
+    resolver: zodResolver(dossierSchema),
+    mode: 'onChange' // Activer la validation en temps réel
+  })
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
-      setFormData(prev => ({
-        ...prev,
-        documents: [...prev.documents, ...newFiles]
-      }))
+      const validFiles = newFiles.filter(file => {
+        const isValidType = ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)
+        const isValidSize = file.size <= 10 * 1024 * 1024 // 10MB
+        if (!isValidType || !isValidSize) {
+          setUploadError('Format de fichier invalide ou taille supérieure à 10MB')
+          return false
+        }
+        return true
+      })
+      setDocuments(prev => [...prev, ...validFiles])
+      setUploadError('')
     }
   }
-  
-  // Supprimer un fichier
-  const removeFile = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      documents: prev.documents.filter((_, i) => i !== index)
-    }))
+
+  const handleNextStep = async () => {
+    // Déclencher la validation des champs de l'étape actuelle
+    const fieldsToValidate = step === 1 
+      ? ['nom', 'prenom', 'dateNaissance', 'sexe', 'commune']
+      : ['parentNom', 'parentTelephone', 'parentEmail', 'diagnostic']
+
+    const isStepValid = await trigger(fieldsToValidate)
+    if (isStepValid) {
+      setStep(step + 1)
+    }
   }
-  
-  // Passer à l'étape suivante
-  const nextStep = () => {
-    setStep(prev => prev + 1)
-    window.scrollTo(0, 0)
-  }
-  
-  // Revenir à l'étape précédente
-  const prevStep = () => {
-    setStep(prev => prev - 1)
-    window.scrollTo(0, 0)
-  }
-  
-  // Soumettre le formulaire
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+
+  const onSubmit = async (data: DossierFormData) => {
+    if (!documents.length) {
+      setUploadError('Veuillez ajouter au moins un document')
+      return
+    }
+
     setLoading(true)
-    
     try {
-      // Simulation d'envoi de données (à remplacer par une vraie API)
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const formData = new FormData()
       
-      // Rediriger vers la page de confirmation
+      // Ajouter les données du formulaire
+      Object.entries(data).forEach(([key, value]) => {
+        if (value) formData.append(key, value)
+      })
+      
+      // Ajouter les documents
+      documents.forEach((file, index) => {
+        formData.append(`document${index}`, file)
+      })
+      
+      const response = await fetch('/api/dossiers/create', {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      
       router.push('/dossiers/success')
     } catch (error) {
       console.error('Erreur lors de la création du dossier:', error)
-      alert('Une erreur est survenue lors de la création du dossier.')
+      setUploadError('Une erreur est survenue lors de la création du dossier.')
     } finally {
       setLoading(false)
     }
   }
-  
+
   return (
     <div className="min-h-screen pt-24 pb-10 bg-gray-50">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -120,7 +139,7 @@ export default function CreateDossierPage() {
         </div>
         
         <div className="bg-white rounded-lg shadow-md p-8">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             {/* Étape 1: Informations de l'enfant */}
             {step === 1 && (
               <div className="space-y-6">
@@ -130,86 +149,76 @@ export default function CreateDossierPage() {
                   <div>
                     <label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
                     <input
-                      type="text"
+                      {...register('nom')}
                       id="nom"
-                      name="nom"
-                      value={formData.nom}
-                      onChange={handleChange}
-                      required
+                      type="text"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
                     />
+                    {errors.nom && (
+                      <p className="mt-1 text-sm text-red-600">{errors.nom.message}</p>
+                    )}
                   </div>
                   
                   <div>
                     <label htmlFor="prenom" className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
                     <input
-                      type="text"
+                      {...register('prenom')}
                       id="prenom"
-                      name="prenom"
-                      value={formData.prenom}
-                      onChange={handleChange}
-                      required
+                      type="text"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
                     />
+                    {errors.prenom && (
+                      <p className="mt-1 text-sm text-red-600">{errors.prenom.message}</p>
+                    )}
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="dateNaissance" className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
                     <input
-                      type="date"
+                      {...register('dateNaissance')}
                       id="dateNaissance"
-                      name="dateNaissance"
-                      value={formData.dateNaissance}
-                      onChange={handleChange}
-                      required
+                      type="date"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
                     />
+                    {errors.dateNaissance && (
+                      <p className="mt-1 text-sm text-red-600">{errors.dateNaissance.message}</p>
+                    )}
                   </div>
                   
                   <div>
                     <label htmlFor="sexe" className="block text-sm font-medium text-gray-700 mb-1">Sexe</label>
                     <select
+                      {...register('sexe')}
                       id="sexe"
-                      name="sexe"
-                      value={formData.sexe}
-                      onChange={handleChange}
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
                     >
                       <option value="">Sélectionner</option>
                       <option value="M">Masculin</option>
                       <option value="F">Féminin</option>
                     </select>
+                    {errors.sexe && (
+                      <p className="mt-1 text-sm text-red-600">{errors.sexe.message}</p>
+                    )}
                   </div>
                 </div>
-                
+
                 <div>
                   <label htmlFor="commune" className="block text-sm font-medium text-gray-700 mb-1">Commune</label>
                   <input
-                    type="text"
+                    {...register('commune')}
                     id="commune"
-                    name="commune"
-                    value={formData.commune}
-                    onChange={handleChange}
-                    required
+                    type="text"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
                   />
-                </div>
-                
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={nextStep}
-                    className="bg-[#006B3F] text-white px-6 py-2 rounded-md hover:bg-[#005535] transition-colors"
-                  >
-                    Suivant
-                  </button>
+                  {errors.commune && (
+                    <p className="mt-1 text-sm text-red-600">{errors.commune.message}</p>
+                  )}
                 </div>
               </div>
             )}
-            
+
             {/* Étape 2: Informations du parent/tuteur */}
             {step === 2 && (
               <div className="space-y-6">
@@ -218,165 +227,137 @@ export default function CreateDossierPage() {
                 <div>
                   <label htmlFor="parentNom" className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
                   <input
-                    type="text"
+                    {...register('parentNom')}
                     id="parentNom"
-                    name="parentNom"
-                    value={formData.parentNom}
-                    onChange={handleChange}
-                    required
+                    type="text"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
                   />
+                  {errors.parentNom && (
+                    <p className="mt-1 text-sm text-red-600">{errors.parentNom.message}</p>
+                  )}
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="parentTelephone" className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                    <input
-                      type="tel"
-                      id="parentTelephone"
-                      name="parentTelephone"
-                      value={formData.parentTelephone}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="parentEmail" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input
-                      type="email"
-                      id="parentEmail"
-                      name="parentEmail"
-                      value={formData.parentEmail}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
-                    />
-                  </div>
+
+                <div>
+                  <label htmlFor="parentTelephone" className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                  <input
+                    {...register('parentTelephone')}
+                    id="parentTelephone"
+                    type="tel"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
+                  />
+                  {errors.parentTelephone && (
+                    <p className="mt-1 text-sm text-red-600">{errors.parentTelephone.message}</p>
+                  )}
                 </div>
-                
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={prevStep}
-                    className="border border-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-50 transition-colors"
-                  >
-                    Précédent
-                  </button>
-                  <button
-                    type="button"
-                    onClick={nextStep}
-                    className="bg-[#006B3F] text-white px-6 py-2 rounded-md hover:bg-[#005535] transition-colors"
-                  >
-                    Suivant
-                  </button>
+
+                <div>
+                  <label htmlFor="parentEmail" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    {...register('parentEmail')}
+                    id="parentEmail"
+                    type="email"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
+                  />
+                  {errors.parentEmail && (
+                    <p className="mt-1 text-sm text-red-600">{errors.parentEmail.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="diagnostic" className="block text-sm font-medium text-gray-700 mb-1">Diagnostic (optionnel)</label>
+                  <textarea
+                    {...register('diagnostic')}
+                    id="diagnostic"
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
+                  />
+                  {errors.diagnostic && (
+                    <p className="mt-1 text-sm text-red-600">{errors.diagnostic.message}</p>
+                  )}
                 </div>
               </div>
             )}
-            
-            {/* Étape 3: Documents et diagnostic */}
+
+            {/* Étape 3: Documents */}
             {step === 3 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-[#006B3F] mb-4">Documents et diagnostic</h2>
+                <h2 className="text-xl font-semibold text-[#006B3F] mb-4">Documents</h2>
                 
                 <div>
-                  <label htmlFor="diagnostic" className="block text-sm font-medium text-gray-700 mb-1">Diagnostic médical</label>
-                  <textarea
-                    id="diagnostic"
-                    name="diagnostic"
-                    value={formData.diagnostic}
-                    onChange={handleChange}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F]"
-                  ></textarea>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ajouter des documents
+                  </label>
+                  <input
+                    type="file"
+                    onChange={handleFileChange}
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-md file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-[#006B3F] file:text-white
+                      hover:file:bg-[#005535]"
+                  />
+                  {uploadError && (
+                    <p className="mt-1 text-sm text-red-600">{uploadError}</p>
+                  )}
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Documents</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                    <div className="space-y-1 text-center">
-                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <div className="flex text-sm text-gray-600">
-                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-[#006B3F] hover:text-[#005535] focus-within:outline-none">
-                          <span>Téléverser des fichiers</span>
-                          <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileChange} />
-                        </label>
-                        <p className="pl-1">ou glisser-déposer</p>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        PNG, JPG, PDF jusqu'à 10MB
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Liste des fichiers téléversés */}
-                {formData.documents.length > 0 && (
+                {documents.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="text-sm font-medium text-gray-700">Fichiers téléversés</h3>
-                    <ul className="mt-2 divide-y divide-gray-200 border border-gray-200 rounded-md">
-                      {formData.documents.map((file, index) => (
-                        <li key={index} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
-                          <div className="w-0 flex-1 flex items-center">
-                            <svg className="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
-                            </svg>
-                            <span className="ml-2 flex-1 w-0 truncate">
-                              {file.name}
-                            </span>
-                          </div>
-                          <div className="ml-4 flex-shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index)}
-                              className="font-medium text-red-600 hover:text-red-500"
-                            >
-                              Supprimer
-                            </button>
-                          </div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Documents ajoutés:</h3>
+                    <ul className="space-y-2">
+                      {documents.map((file, index) => (
+                        <li key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                          <span className="text-sm text-gray-600">{file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            Supprimer
+                          </button>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
-                
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={prevStep}
-                    className="border border-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-50 transition-colors"
-                  >
-                    Précédent
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-[#006B3F] text-white px-6 py-2 rounded-md hover:bg-[#005535] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
-                  >
-                    {loading ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Traitement en cours...
-                      </>
-                    ) : (
-                      'Soumettre le dossier'
-                    )}
-                  </button>
-                </div>
               </div>
             )}
+
+            <div className="flex justify-between mt-6">
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setStep(step - 1)}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Précédent
+                </button>
+              )}
+              
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="px-6 py-2 bg-[#006B3F] text-white rounded-md hover:bg-[#005535] transition-colors"
+                >
+                  Suivant
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={loading || !isValid}
+                  className={`px-6 py-2 bg-[#006B3F] text-white rounded-md transition-colors ${
+                    (loading || !isValid) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#005535]'
+                  }`}
+                >
+                  {loading ? 'Création en cours...' : 'Créer le dossier'}
+                </button>
+              )}
+            </div>
           </form>
-        </div>
-        
-        <div className="mt-6 text-center">
-          <Link href="/dossiers" className="text-[#006B3F] hover:underline">
-            Retour à la liste des dossiers
-          </Link>
         </div>
       </div>
     </div>

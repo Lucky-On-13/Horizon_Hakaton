@@ -174,26 +174,17 @@ export default function Header() {
                 >
                   <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#FFE5A5]">
                     <Image 
-                      src="/images/avatar-placeholder.jpg" 
+                      src={user?.avatar || "/images/avatar-placeholder.jpg"}
                       alt="Photo de profil"
                       fill
                       className="object-cover"
                     />
                   </div>
                   <span className={`${isScrolled ? 'text-[#006B3F]' : 'text-white'}`}>
-                    Mon Profil
+                    {user?.prenom} {user?.nom}
                   </span>
-                  <svg 
-                    className={`w-4 h-4 ${isScrolled ? 'text-[#006B3F]' : 'text-white'} transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
                 </button>
                 
-                {/* Menu déroulant du profil */}
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 animate-fadeIn">
                     <Link 

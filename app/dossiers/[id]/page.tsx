@@ -3,40 +3,40 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-// Types
-type DossierStatus = 'Nouveau' | 'En cours' | 'Incomplet' | 'Accepté' | 'Rejeté' | 'Clôturé'
-
-interface Comment {
-  id: string
-  text: string
-  author: string
-  date: string
-}
+import { StatutDossier, Sexe } from '@prisma/client'
 
 interface Document {
-  id: string
+  id: number
   name: string
   type: string
-  uploadDate: string
   url: string
+  uploadDate: Date
+}
+
+interface Commentaire {
+  id: number
+  text: string
+  author: string
+  date: Date
 }
 
 interface Dossier {
-  id: string
+  id: number
   nom: string
   prenom: string
-  dateNaissance: string
-  sexe: string
+  dateNaissance: Date
+  sexe: Sexe
   commune: string
+  quartier: string | null
   parentNom: string
-  parentTelephone: string
-  parentEmail: string
-  diagnostic: string
-  statut: DossierStatus
-  dateCreation: string
+  parentTelephone: string | null
+  parentEmail: string | null
+  diagnostic: string | null
+  statut: StatutDossier
+  dateCreation: Date
+  dateModification: Date
   documents: Document[]
-  commentaires: Comment[]
+  commentaires: Commentaire[]
 }
 
 export default function DossierDetailPage() {
@@ -47,117 +47,98 @@ export default function DossierDetailPage() {
   const [activeTab, setActiveTab] = useState('info')
   const [newComment, setNewComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
-  const [newStatus, setNewStatus] = useState<DossierStatus | ''>('')
-  
-  // Simuler le chargement du dossier
+  const [newStatus, setNewStatus] = useState<StatutDossier | ''>('')
+
   useEffect(() => {
     const fetchDossier = async () => {
-      // Simuler un appel API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Données de test
-      const mockDossier: Dossier = {
-        id: params.id as string,
-        nom: 'Dupont',
-        prenom: 'Jean',
-        dateNaissance: '2015-05-15',
-        sexe: 'M',
-        commune: 'Kinshasa',
-        parentNom: 'Dupont Marie',
-        parentTelephone: '+243 123 456 789',
-        parentEmail: 'marie.dupont@example.com',
-        diagnostic: 'Trouble du spectre autistique léger',
-        statut: 'En cours',
-        dateCreation: '2023-05-15',
-        documents: [
-          { id: '1', name: 'Rapport médical initial.pdf', type: 'application/pdf', uploadDate: '2023-05-15', url: '#' },
-          { id: '2', name: 'Évaluation psychologique.pdf', type: 'application/pdf', uploadDate: '2023-06-02', url: '#' },
-          { id: '3', name: 'Photo d\'identité.jpg', type: 'image/jpeg', uploadDate: '2023-05-15', url: '#' }
-        ],
-        commentaires: [
-          { id: '1', text: 'Dossier reçu, en attente d\'évaluation initiale.', author: 'Dr. Mbala', date: '2023-05-16' },
-          { id: '2', text: 'Évaluation initiale effectuée. Recommandation pour un suivi hebdomadaire.', author: 'Dr. Lukaku', date: '2023-06-03' }
-        ]
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/dossiers/${params.id}`)
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement du dossier')
+        }
+        const data = await response.json()
+        setDossier(data)
+        setNewStatus(data.statut)
+      } catch (error) {
+        console.error('Erreur lors du chargement du dossier:', error)
+      } finally {
+        setLoading(false)
       }
-      
-      setDossier(mockDossier)
-      setNewStatus(mockDossier.statut)
-      setLoading(false)
     }
     
     fetchDossier()
   }, [params.id])
-  
-  // Ajouter un commentaire
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newComment.trim()) return
+    if (!newComment.trim() || !dossier) return
     
     setSubmittingComment(true)
     
-    // Simuler un appel API
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const newCommentObj: Comment = {
-      id: Date.now().toString(),
-      text: newComment,
-      author: 'Utilisateur actuel',
-      date: new Date().toISOString().split('T')[0]
-    }
-    
-    setDossier(prev => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        commentaires: [...prev.commentaires, newCommentObj]
+    try {
+      const response = await fetch(`/api/dossiers/${dossier.id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: newComment }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'ajout du commentaire')
       }
-    })
-    
-    setNewComment('')
-    setSubmittingComment(false)
+
+      const newCommentData = await response.json()
+      
+      setDossier(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          commentaires: [...prev.commentaires, newCommentData]
+        }
+      })
+      
+      setNewComment('')
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du commentaire:', error)
+    } finally {
+      setSubmittingComment(false)
+    }
   }
-  
-  // Mettre à jour le statut
+
   const handleStatusChange = async () => {
     if (!newStatus || !dossier) return
     
-    // Simuler un appel API
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    setDossier(prev => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        statut: newStatus as DossierStatus
+    try {
+      const response = await fetch(`/api/dossiers/${dossier.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ statut: newStatus }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour du statut')
       }
-    })
-    
-    // Ajouter un commentaire automatique pour le changement de statut
-    const statusComment: Comment = {
-      id: Date.now().toString(),
-      text: `Statut du dossier modifié de "${dossier.statut}" à "${newStatus}"`,
-      author: 'Système',
-      date: new Date().toISOString().split('T')[0]
+
+      const updatedDossier = await response.json()
+      setDossier(updatedDossier)
+      
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error)
     }
-    
-    setDossier(prev => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        commentaires: [...prev.commentaires, statusComment]
-      }
-    })
   }
-  
-  // Obtenir la couleur du badge en fonction du statut
-  const getStatusColor = (status: DossierStatus) => {
+
+  const getStatusColor = (status: StatutDossier) => {
     switch(status) {
-      case 'Nouveau': return 'bg-blue-100 text-blue-800'
-      case 'En cours': return 'bg-yellow-100 text-yellow-800'
-      case 'Incomplet': return 'bg-orange-100 text-orange-800'
-      case 'Accepté': return 'bg-green-100 text-green-800'
-      case 'Rejeté': return 'bg-red-100 text-red-800'
-      case 'Clôturé': return 'bg-gray-100 text-gray-800'
+      case 'NOUVEAU': return 'bg-blue-100 text-blue-800'
+      case 'EN_COURS': return 'bg-yellow-100 text-yellow-800'
+      case 'INCOMPLET': return 'bg-orange-100 text-orange-800'
+      case 'ACCEPTE': return 'bg-green-100 text-green-800'
+      case 'REJETE': return 'bg-red-100 text-red-800'
+      case 'CLOTURE': return 'bg-gray-100 text-gray-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
