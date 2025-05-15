@@ -3,7 +3,8 @@
 import db from "@/prisma/prisma";
 import { UUID } from "crypto";
 import jwt from "jsonwebtoken";
-
+import { z } from "zod";
+import { wisiSchema } from "./schema";
 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dfcghbjk,ljbhfvghjbkjl'
@@ -109,3 +110,37 @@ export async function getUserByEmail(email: string) {
     return data;
 }
 
+const formulaireWisiSchema = z.object({
+  dossierId: z.number(),
+  revenuMensuel: z.number().optional(),
+  besoins: z.string().optional(),
+  autresInformations: z.string().optional()
+});
+
+export async function submitWisiForm(data: any) {
+  try {
+    await db.formulaireWisi.create({
+      data: {
+        dossierId: data.dossierId,
+        nom: data.nom,
+        prenom: data.prenom,
+        dateNaissance: new Date(data.dateNaissance),
+        lieuNaissance: data.lieuNaissance,
+        adresse: data.adresse,
+        telephone: data.telephone,
+        email: data.email,
+        typeHandicap: data.typeHandicap,
+        niveauEtude: data.niveauEtude,
+        situationFamiliale: data.situationFamiliale,
+        nombreEnfants: Number(data.nombreEnfants),
+        profession: data.profession,
+        revenuMensuel: Number(data.revenuMensuel),
+        besoins: data.besoins,
+      }
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('[WISI_SUBMIT_ERROR]', error)
+    return { success: false, error: 'Erreur lors de la soumission.' }
+  }
+}

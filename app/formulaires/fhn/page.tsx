@@ -100,12 +100,9 @@ export default function FHNFormPage() {
   const { register, handleSubmit, control, formState: { errors } } = useForm({
       resolver: zodResolver(formulaireFhnSchema),
     })
-
+    
   return (
     <div className="">
-    <div>
-      <h1>Salut mon gars</h1>
-    </div>
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-[#006B3F] mb-4">Enquête d'Identification et d'Évaluation</h1>
         <h2 className="text-xl text-[#FF8B7B]">de la prise en charge du handicap</h2>
