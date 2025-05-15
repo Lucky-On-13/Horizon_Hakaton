@@ -216,14 +216,27 @@ model FormulaireTarii {
 
 
 model FormulaireWisi {
-  id                        Int       @id @default(autoincrement())
-  dossierId                 Int       @unique @map("dossier_id")
-  dossier                   Dossier   @relation(fields: [dossierId], references: [id], onDelete: Cascade)
-  
-  // Ajoutez ici les champs du formulaire WISI selon vos besoins
-  
-  dateCreation              DateTime  @default(now()) @map("date_creation")
-  dateModification          DateTime  @updatedAt @map("date_modification")
+  id               Int       @id @default(autoincrement())
+  dossierId        Int       @unique @map("dossier_id")
+  dossier          Dossier   @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  nom              String
+  prenom           String
+  dateNaissance    DateTime  @map("date_naissance")
+  lieuNaissance    String
+  adresse          String
+  telephone        String
+  email            String
+  typeHandicap     String
+  niveauEtude      String
+  situationFamiliale String
+  nombreEnfants    Int
+  profession       String
+  revenuMensuel    Float
+  besoins          String
+
+  dateCreation     DateTime  @default(now()) @map("date_creation")
+  dateModification DateTime  @updatedAt @map("date_modification")
 
   @@map("formulaire_wisi")
 }

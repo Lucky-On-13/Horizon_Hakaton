@@ -59,6 +59,27 @@ export const formulaireFhnSchema = z.object({
   })
 });
 
+
+  export const wisiSchema = z.object({
+  nom: z.string().min(1),
+  prenom: z.string().min(1),
+  dateNaissance: z.string(),
+  lieuNaissance: z.string(),
+  adresse: z.string(),
+  telephone: z.string(),
+  email: z.string().email(),
+  typeHandicap: z.string(),
+  niveauEtude: z.string(),
+  situationFamiliale: z.string(),
+  nombreEnfants: z.string(), // ou z.number().transform(String)
+  profession: z.string(),
+  revenuMensuel: z.string(), // idem
+  besoins: z.string(),
+  dossierId: z.string()
+});
+
+
+export type wisiInput = z.infer<typeof wisiSchema>;
 export type fhnInput = z.infer<typeof formulaireFhnSchema>;
 export type connecionInput = z.infer<typeof loginSchema>;
 export type subscribeInput = z.infer<typeof fullSchema>;

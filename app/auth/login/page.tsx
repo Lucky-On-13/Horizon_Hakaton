@@ -51,9 +51,18 @@ export default function LoginPage() {
       setError(result.message || 'Identifiants incorrects')
     }
       
-      alert('connexion reussie !!!');
-      router.push('/dashboard')
-      }
+    if(con.user?.role === "ADMIN")
+      router.push('/dashboard/admin') 
+    }
+    
+    if(con.user?.role === "PARENT"){
+      router.push('/dashboard/parent') 
+    }
+    if(con.user?.role === "STAFF"){
+      router.push('/dashboard/secretaire') 
+    }
+    router.push('/dashboard/analyste') 
+      
         setError("Erreur d'identifiants");
         return;
     }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+
 
 // Types pour les données
 type DossierStatus = 'Nouveau' | 'En cours' | 'Incomplet' | 'Accepté' | 'Rejeté' | 'Clôturé'
