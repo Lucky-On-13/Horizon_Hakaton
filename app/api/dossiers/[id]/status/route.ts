@@ -6,18 +6,16 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { text } = await request.json()
+    const { statut } = await request.json()
     
-    const commentaire = await prisma.commentaire.create({
+    const status = await prisma.dossier.update({
+      where: { id: parseInt(params.id) },
       data: {
-        text,
-        dossierId: parseInt(params.id),
-        dateCreation: new Date(),
-        dateModification: new Date()
+        statut
       }
     })
 
-    return NextResponse.json(commentaire)
+    return NextResponse.json(status)
   } catch (error) {
     console.error('Erreur lors de l\'ajout du commentaire:', error)
     return NextResponse.json(

@@ -68,11 +68,15 @@ export default function SecretaireDashboardPage() {
                 placeholder="Rechercher un dossier..."
                 className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006B3F]"
               />
+              {/* 'NOUVEAU' | 'EN_COURS' | 'INCOMPLET' | 'ACCEPTE' | 'REJETE' | 'CLOTURE' */}
               <select className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#006B3F]">
                 <option value="">Tous les statuts</option>
-                <option value="nouveau">Nouveau</option>
-                <option value="en_cours">En cours</option>
-                <option value="incomplet">Incomplet</option>
+                <option value="NOUVEAU">Nouveau</option>
+                <option value="EN_COURS">En cours</option>
+                <option value="INCOMPLET">Incomplet</option>
+                <option value="ACCEPTE">Accepté</option>
+                <option value="REJETE">Rejeté</option>
+                <option value="CLOTURE">Cloturé</option>
               </select>
             </div>
           </div>

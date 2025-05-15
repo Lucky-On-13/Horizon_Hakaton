@@ -50,7 +50,7 @@ export async function connectUser(email: any, password: any) {
       role: user.role, // optionnel
     },
     JWT_SECRET,
-    { expiresIn: '1d' }
+    { expiresIn: '1h' }
   )
 
   return {

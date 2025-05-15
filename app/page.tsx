@@ -6,53 +6,73 @@ import AuthButton from '@/components/AuthButton'
 export default function Home() {
   return (
     <div className="min-h-screen pt-24"> {/* Ajout du padding-top */}
-      {/* Hero Section avec style amélioré */}
-      <section className="relative h-screen min-h-[900px] max-h-[900px] bg-gradient-to-r ">
-        <div className="absolute inset-0 bg-black/50">
-          <Image
-            src="/images/hero-image.jpg"
-            alt="Jeunes apprenants de la Fondation Horizons Nouveaux"
-            fill
-            sizes="100vw"
-            quality={85}
-            className="object-cover mix-blend-overlay"
-            priority
-          />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white px-4 max-w-4xl">
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight animate-fade-in-down">
-              Un Accompagnement Personnalisé pour Chaque Enfant
-            </h1>
-            <p className="text-xl md:text-2xl mb-12 font-light animate-fade-in-up">
-              La Fondation Horizons Nouveaux s'engage pour l'inclusion et le développement des jeunes en situation de handicap au Gabon
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in">
-              <AuthButton 
-                href="/formulaires/wisi"
-                className="bg-[#FF8B7B] text-white px-8 py-4 rounded-full text-lg hover:bg-[#FF7B6B] transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-semibold"
-              >
-                Commencer l'inscription
-              </AuthButton>
-              <Link 
-                href="/about"
-                className="border-2 border-[#FFE5A5] text-[#FFE5A5] px-8 py-4 rounded-full text-lg hover:bg-[#FFE5A5] hover:text-[#006B3F] transition-all duration-300 transform hover:scale-105 font-semibold"
-              >
-                En savoir plus
-              </Link>
+       {/* Hero Section */}
+       <section className="relative h-screen min-h-[100px] max-h-[900px] bg-gray-50">
+        <div className="container mx-auto px-4 h-full flex items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-[#006B3F]"></div>
+                  <div className="w-8 h-8 rounded-full bg-[#FF8B7B]"></div>
+                  <div className="w-8 h-8 rounded-full bg-[#FFE5A5]"></div>
+                </div>
+                <span className="text-gray-600">+3000 enfants accompagnés</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl font-bold text-[#006B3F]">
+                Offrons à chaque enfant une chance de réussir !
+              </h1>
+              
+              <p className="text-xl text-gray-600">
+                Une solution digitale pensée pour faciliter le lien entre les familles et la Fondation Horizons Nouveaux dans le suivi des enfants en situation de handicap.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <AuthButton 
+                  href="/formulaires/wisi"
+                  className="bg-[#FF8B7B] text-white px-8 py-4 rounded-full text-lg hover:bg-[#FF7B6B] transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-semibold"
+                >
+                  Donation
+                </AuthButton>
+                <Link 
+                  href="/about"
+                  className="bg-[#006B3F] text-white px-8 py-4 rounded-full text-lg hover:bg-[#005535] transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-semibold"
+                >
+                  Soumettre un dossier
+                </Link>
+              </div>
             </div>
-            {/* Ajout du bouton d'aide */}
-            <div className="mt-8">
-              <HelpButton text="Comment puis-je vous aider ?" className="mx-auto" />
+            
+            <div className="relative">
+              <div className="relative h-[500px] w-full">
+                <div className="absolute top-0 right-0 w-4/5 h-4/5">
+                  <Image
+                    src="/images/hero-1.jpg"
+                    alt="Portrait d'enfant"
+                    fill
+                    className="object-cover rounded-lg"
+                    priority
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 w-2/3 h-3/4">
+                  <Image
+                    src="/images/hero-2.jpg"
+                    alt="Enfant souriant"
+                    fill
+                    className="object-cover rounded-3xl"
+                    priority
+                  />
+                </div>
+                <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#FF8B7B]"></div>
+                <div className="absolute -left-4 top-1/4 w-3 h-3 rounded-full bg-[#006B3F]"></div>
+                <div className="absolute -right-4 bottom-1/4 w-3 h-3 rounded-full bg-[#FFE5A5]"></div>
+              </div>
             </div>
           </div>
         </div>
-        <div className="absolute bottom-10 left-0 right-0 flex justify-center animate-bounce">
-          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </div>
       </section>
+
 
       {/* Section d'introduction */}
       <section className="py-20 bg-white">
@@ -343,3 +363,70 @@ export default function Home() {
   )
 }
 // End of Home component
+
+      {/* Hero Section */}
+      <section className="relative h-screen min-h-[900px] max-h-[900px] bg-gray-50">
+        <div className="container mx-auto px-4 h-full flex items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-[#006B3F]"></div>
+                  <div className="w-8 h-8 rounded-full bg-[#FF8B7B]"></div>
+                  <div className="w-8 h-8 rounded-full bg-[#FFE5A5]"></div>
+                </div>
+                <span className="text-gray-600">+3000 enfants accompagnés</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl font-bold text-[#006B3F]">
+                Offrons à chaque enfant une chance de réussir !
+              </h1>
+              
+              <p className="text-xl text-gray-600">
+                Une solution digitale pensée pour faciliter le lien entre les familles et la Fondation Horizons Nouveaux dans le suivi des enfants en situation de handicap.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <AuthButton 
+                  href="/formulaires/wisi"
+                  className="bg-[#FF8B7B] text-white px-8 py-4 rounded-full text-lg hover:bg-[#FF7B6B] transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-semibold"
+                >
+                  Donation
+                </AuthButton>
+                <Link 
+                  href="/about"
+                  className="bg-[#006B3F] text-white px-8 py-4 rounded-full text-lg hover:bg-[#005535] transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-semibold"
+                >
+                  Soumettre un dossier
+                </Link>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="relative h-[500px] w-full">
+                <div className="absolute top-0 right-0 w-4/5 h-4/5">
+                  <Image
+                    src="/images/hero-1.jpg"
+                    alt="Portrait d'enfant"
+                    fill
+                    className="object-cover rounded-lg"
+                    priority
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 w-4/5 h-4/5">
+                  <Image
+                    src="/images/hero-2.jpg"
+                    alt="Enfant souriant"
+                    fill
+                    className="object-cover rounded-lg"
+                    priority
+                  />
+                </div>
+                <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#FF8B7B]"></div>
+                <div className="absolute -left-4 top-1/4 w-3 h-3 rounded-full bg-[#006B3F]"></div>
+                <div className="absolute -right-4 bottom-1/4 w-3 h-3 rounded-full bg-[#FFE5A5]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>

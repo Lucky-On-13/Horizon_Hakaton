@@ -55,7 +55,8 @@ export default function DossierDetailPage() {
         setLoading(true)
         const response = await fetch(`/api/dossiers/${params.id}`)
         if (!response.ok) {
-          throw new Error('Erreur lors du chargement du dossier')
+          const errorData = await response.json()
+        throw new Error(errorData.error || 'Erreur lors du chargement du dossier')
         }
         const data = await response.json()
         setDossier(data)
@@ -112,7 +113,7 @@ export default function DossierDetailPage() {
     
     try {
       const response = await fetch(`/api/dossiers/${dossier.id}/status`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -120,7 +121,8 @@ export default function DossierDetailPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour du statut')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erreur lors de la mise à jour du statut')
       }
 
       const updatedDossier = await response.json()
@@ -128,6 +130,8 @@ export default function DossierDetailPage() {
       
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error)
+      // Vous pouvez ajouter ici un état pour afficher l'erreur à l'utilisateur
+      alert('Une erreur est survenue lors de la mise à jour du statut')
     }
   }
 
