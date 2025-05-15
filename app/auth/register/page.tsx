@@ -9,6 +9,7 @@ import { fullSchema } from '@/server/schema';
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { subscribeUser } from '@/server/data'
+import { toast } from 'sonner'
 
 
 export default function RegisterPage() {
@@ -56,6 +57,7 @@ export default function RegisterPage() {
       setLoading(true);
       setError('');
       await subscribeUser({ ...data, role: formData.role });
+      toast.success('Inscription réussie');
       console.log("Utilisateurs enregistrées avec succès");
       router.push('/auth/login?registered=true')
       router.refresh()

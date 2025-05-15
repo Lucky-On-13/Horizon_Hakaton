@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ChatAssistant from '@/components/ChatAssistant'
 import { AssistantProvider } from '@/contexts/AssistantContext'
+import {Toaster} from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] })
 

@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { fullSchema, loginSchema } from '@/server/schema'
 import { connectUser } from '@/server/data'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 
 
 export default function LoginPage() {
@@ -34,6 +35,7 @@ export default function LoginPage() {
       const con = await connectUser(data.email, data.password);
       if(con.user?.password === data.password){
         localStorage.setItem('user', JSON.stringify({
+        id: con.user?.id,
         nom: data.nom,
         prenom: data.prenom,
         email: data.email,
@@ -46,6 +48,7 @@ export default function LoginPage() {
     const result = await res.json();
 
     if (result.success) {
+      toast.success('Connexion réussie');
       router.push('/dashboard') 
     } else {
       setError(result.message || 'Identifiants incorrects')

@@ -1,14 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+type Dossier = {
+  id: string;
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  statut: string;
+  dateModification: string;
+};
+
 export default function ParentDashboardPage() {
+  const [dossiers, setDossiers] = useState<Dossier[]>([])
+
+  useEffect(() => {
+  const fetchDossiers = async () => {
+    const userId = localStorage.getItem('id')
+    if (!userId) return
+
+    try {
+      const res = await fetch(`/api/dossiers?userId=${userId}`)
+      const data = await res.json()
+      setDossiers(data)
+    } catch (error) {
+      console.error('Erreur lors du fetch des dossiers:', error)
+    }
+  }
+
+  fetchDossiers()
+}, []);
+
+  // Calcul des stats dynamiques
   const stats = [
-    { label: 'Mes Dossiers', value: 2, color: 'bg-blue-500' },
-    { label: 'En cours', value: 1, color: 'bg-yellow-500' },
-    { label: 'Acceptés', value: 1, color: 'bg-green-500' },
-    { label: 'En attente', value: 0, color: 'bg-orange-500' }
+    { label: 'Mes Dossiers', value: dossiers.length, color: 'bg-blue-500' },
+    { label: 'En cours', value: dossiers.filter(d => d.statut === 'EN_COURS').length, color: 'bg-yellow-500' },
+    { label: 'Acceptés', value: dossiers.filter(d => d.statut === 'ACCEPTE').length, color: 'bg-green-500' },
+    { label: 'En attente', value: dossiers.filter(d => d.statut === 'EN_ATTENTE').length, color: 'bg-orange-500' },
   ]
 
   return (
@@ -32,7 +61,7 @@ export default function ParentDashboardPage() {
           </div>
         </div>
         
-        {/* Statistiques */}
+        {/* Statistiques dynamiques */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <div key={index} className="bg-white p-6 rounded-lg shadow-md">
@@ -57,30 +86,29 @@ export default function ParentDashboardPage() {
             <h2 className="text-xl font-bold text-[#006B3F]">Mes Dossiers</h2>
           </div>
           
-          {/* Tableau des dossiers */}
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Enfant
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date de naissance
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Dernière mise à jour
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enfant</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de naissance</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dernière mise à jour</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {/* Contenu du tableau */}
+                {dossiers.map((dossier: any) => (
+                  <tr key={dossier.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">{dossier.nom} {dossier.prenom}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{new Date(dossier.dateNaissance).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{dossier.statut}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{new Date(dossier.dateModification).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <Link href={`/dossiers/${dossier.id}`} className="text-blue-600 hover:underline">Voir</Link>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
