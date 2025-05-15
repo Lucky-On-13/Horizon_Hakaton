@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-export default async function POST(
+ async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
