@@ -61,7 +61,10 @@ export default function LoginPage() {
     if(con.user?.role === "STAFF"){
       router.push('/dashboard/secretaire') 
     }
-    router.push('/dashboard/analyste') 
+    if(con.user?.role === "ANALYSTE"){
+      router.push('/dashboard/') 
+    }
+    
       
         setError("Erreur d'identifiants");
         return;

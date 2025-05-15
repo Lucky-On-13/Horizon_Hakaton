@@ -2,16 +2,38 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+
+// Types pour améliorer la maintenabilité
+type MenuItem = {
+  name: string
+  path: string
+}
+
+type User = {
+  id: number
+  nom: string
+  prenom: string
+  email: string
+  role: string
+  avatar?: string
+}
+
+const FORM_ITEMS: MenuItem[] = [
+  { name: 'WISI', path: '/formulaires/wisi' },
+  { name: 'TARII', path: '/formulaires/tarii' },
+  { name: 'FHN', path: '/formulaires/fhn' }
+]
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const pathname = usePathname()
-  
-  // Utilisation de useEffect pour éviter les erreurs côté serveur
+  const router = useRouter()
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
@@ -19,35 +41,54 @@ export default function Header() {
     
     window.addEventListener('scroll', handleScroll)
     
-    // Simuler un utilisateur connecté (à remplacer par votre logique d'authentification)
+    // Amélioration de la vérification d'authentification
     const checkAuth = () => {
-      // Ici, vous devriez vérifier si l'utilisateur est authentifié
-      // Par exemple, en vérifiant un token dans localStorage ou via une API
-      const fakeAuth = localStorage.getItem('isLoggedIn') === 'true'
-      setIsLoggedIn(fakeAuth)
+      try {
+        const token = localStorage.getItem('token')
+        const userData = localStorage.getItem('user')
+        
+        if (token && userData) {
+          const parsedUser = JSON.parse(userData)
+          setUser(parsedUser)
+          setIsLoggedIn(true)
+        } else {
+          handleLogout()
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification de l\'authentification:', error)
+        handleLogout()
+      }
     }
     
     checkAuth()
-    
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-  
-  // Fermer le menu mobile lors du changement de page
+
   useEffect(() => {
     setIsMobileMenuOpen(false)
     setShowProfileMenu(false)
   }, [pathname])
-  
-  // Vérifier si le lien est actif
+
   const isActive = (path: string) => {
     return pathname === path || pathname.startsWith(`${path}/`)
   }
-  
-  // Simuler une déconnexion
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn')
-    setIsLoggedIn(false)
-    setShowProfileMenu(false)
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      })
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error)
+    } finally {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setUser(null)
+      setIsLoggedIn(false)
+      setShowProfileMenu(false)
+      router.push('/')
+    }
   }
 
   return (
@@ -85,7 +126,15 @@ export default function Header() {
               <span>Accueil</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
             </Link>
-            {['WISI', 'TARII', 'FHN'].map((item) => (
+            {isLoggedIn && (
+              <Link href="/dashboard" className={`relative group ${
+                isScrolled ? 'text-[#006B3F]' : 'text-white'
+              } ${isActive('/dashboard') ? 'font-semibold' : ''}`}>
+                <span>Tableau de bord</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            )}
+            {isLoggedIn && ['WISI', 'TARII', 'FHN'].map((item) => (
               <Link 
                 key={item}
                 href={`/formulaires/${item.toLowerCase()}`} 

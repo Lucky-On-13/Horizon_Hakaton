@@ -26,6 +26,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      fhn-frontend:
+        specifier: 'file:'
+        version: file:(@types/react-dom@19.1.4(@types/react@19.1.4))(@types/react@19.1.4)(prisma@6.7.0(typescript@5.8.3))(typescript@5.8.3)
       framer-motion:
         specifier: ^12.11.0
         version: 12.11.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -927,6 +930,9 @@ packages:
     resolution: {integrity: sha512-8pgjLUcUjcgDg+2Q4NYXnPbo/vncAY4UmyaCm0jZevERqCHZIaWwdJHkf8XQtu4AxSKCdvrUbT0XUr1IdZzI8Q==}
     engines: {node: '>=18'}
     hasBin: true
+
+  'fhn-frontend@file:':
+    resolution: {directory: '', type: directory}
 
   framer-motion@12.11.0:
     resolution: {integrity: sha512-BaBPmkhaC2l0n619Kt1nQaxSdUdyyz5V1Z7EKJ1CcraOTZitgVx0RTbL8lmg2XesaFi6o8MPBIhkWDIvzDpGaQ==}
@@ -1957,6 +1963,36 @@ snapshots:
       '@esbuild/win32-arm64': 0.25.4
       '@esbuild/win32-ia32': 0.25.4
       '@esbuild/win32-x64': 0.25.4
+
+  fhn-frontend@file:(@types/react-dom@19.1.4(@types/react@19.1.4))(@types/react@19.1.4)(prisma@6.7.0(typescript@5.8.3))(typescript@5.8.3):
+    dependencies:
+      '@hookform/resolvers': 5.0.1(react-hook-form@7.56.3(react@19.1.0))
+      '@prisma/client': 6.7.0(prisma@6.7.0(typescript@5.8.3))(typescript@5.8.3)
+      '@prisma/extension-accelerate': 1.3.0(@prisma/client@6.7.0(prisma@6.7.0(typescript@5.8.3))(typescript@5.8.3))
+      '@radix-ui/react-select': 2.2.4(@types/react-dom@19.1.4(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      framer-motion: 12.11.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      jsonwebtoken: 9.0.2
+      lucide-react: 0.510.0(react@19.1.0)
+      next: 15.3.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-hook-form: 7.56.3(react@19.1.0)
+      tailwind-merge: 3.3.0
+      zod: 3.24.4
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@emotion/is-prop-valid'
+      - '@opentelemetry/api'
+      - '@playwright/test'
+      - '@types/react'
+      - '@types/react-dom'
+      - babel-plugin-macros
+      - babel-plugin-react-compiler
+      - prisma
+      - sass
+      - typescript
 
   framer-motion@12.11.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:

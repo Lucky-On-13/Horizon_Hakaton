@@ -5,6 +5,7 @@ import { UUID } from "crypto";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { wisiSchema } from "./schema";
+import { Role } from "@prisma/client";
 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dfcghbjk,ljbhfvghjbkjl'
@@ -87,7 +88,62 @@ export async function connectUser(email: any, password: any) {
 
 
 export async function getAllUsers() {
-    return await db.user.findMany();
+  try {
+    const users = await db.user.findMany({
+      select: {
+        id: true,
+        nom: true,
+        prenom: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        telephone: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    return users;
+  } catch (error) {
+    console.error('[GET_ALL_USERS_ERROR]', error);
+    return [];
+  }
+}
+
+export async function searchUsers(searchTerm: string, role?: Role) {
+  try {
+    const where: any = {
+      OR: [
+        { nom: { contains: searchTerm, mode: 'insensitive' } },
+        { prenom: { contains: searchTerm, mode: 'insensitive' } },
+        { email: { contains: searchTerm, mode: 'insensitive' } }
+      ]
+    };
+
+    if (role) {
+      where.role = role;
+    }
+
+    const users = await db.user.findMany({
+      where,
+      select: {
+        id: true,
+        nom: true,
+        prenom: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        telephone: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    return users;
+  } catch (error) {
+    console.error('[SEARCH_USERS_ERROR]', error);
+    return [];
+  }
 }
 
 export async function getUserByEmail(email: string) {
@@ -142,5 +198,34 @@ export async function submitWisiForm(data: any) {
   } catch (error) {
     console.error('[WISI_SUBMIT_ERROR]', error)
     return { success: false, error: 'Erreur lors de la soumission.' }
+  }
+}
+
+
+export async function getAdminStats() {
+  try {
+    const users = await db.user.groupBy({
+      by: ['role'],
+      _count: {
+        id: true
+      }
+    });
+
+    const stats = users.map(stat => ({
+      label: stat.role === 'PARENT' ? 'Utilisateurs' :
+             stat.role === 'STAFF' ? 'Secrétaires' :
+             stat.role === 'ANALYSTE' ? 'Analystes' :
+             stat.role === 'ADMIN' ? 'Admins' : stat.role,
+      value: stat._count.id,
+      color: stat.role === 'PARENT' ? 'bg-blue-500' :
+             stat.role === 'STAFF' ? 'bg-green-500' :
+             stat.role === 'ANALYSTE' ? 'bg-yellow-500' :
+             stat.role === 'ADMIN' ? 'bg-purple-500' : 'bg-gray-500'
+    }));
+
+    return stats;
+  } catch (error) {
+    console.error('[GET_ADMIN_STATS_ERROR]', error);
+    return [];
   }
 }
