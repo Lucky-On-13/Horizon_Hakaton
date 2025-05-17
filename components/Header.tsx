@@ -36,17 +36,20 @@ const DASHBOARD_LINKS: Record<string, MenuItem[]> = {
   STAFF: [
     { name: 'Tableau de bord', path: '/dashboard' },
     { name: 'Dossiers', path: '/dashboard/dossiers' },
-    { name: 'Formulaires', path: '/dashboard/formulaires' }
+    { name: 'Formulaires', path: '/dashboard/formulaires' },
+    { name: 'Statistiques', path: '/dashboard/statistiques' }
   ],
   PARENT: [
     { name: 'Tableau de bord', path: '/dashboard' },
     { name: 'Mes dossiers', path: '/dashboard/mes-dossiers' },
-    { name: 'Mes formulaires', path: '/dashboard/mes-formulaires' }
+    { name: 'Mes formulaires', path: '/dashboard/mes-formulaires' },
+    { name: 'Statistiques', path: '/dashboard/statistiques' }
   ],
   ANALYSTE: [
     { name: 'Tableau de bord', path: '/dashboard' },
     { name: 'Analyses', path: '/dashboard/analyses' },
-    { name: 'Rapports', path: '/dashboard/rapports' }
+    { name: 'Rapports', path: '/dashboard/rapports' },
+    { name: 'Statistiques', path: '/dashboard/statistiques' }
   ]
 }
 
@@ -64,33 +67,51 @@ export default function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
     }
-    
+
     window.addEventListener('scroll', handleScroll)
-    
+
     // Amélioration de la vérification d'authentification
     const checkAuth = () => {
       try {
-        const token = localStorage.getItem('token')
         const userData = localStorage.getItem('user')
-        
-        if (token && userData) {
+
+        if (userData) {
           const parsedUser = JSON.parse(userData)
           setUser(parsedUser)
           setIsLoggedIn(true)
         } else {
-          handleLogout()
+          // Ne pas déconnecter automatiquement si aucun utilisateur n'est trouvé
+          // Cela permet de conserver l'état de connexion même après un rafraîchissement
+          setUser(null)
+          setIsLoggedIn(false)
         }
       } catch (error) {
         console.error('Erreur lors de la vérification de l\'authentification:', error)
-        handleLogout()
+        // Ne pas déconnecter en cas d'erreur, juste logger l'erreur
       }
     }
-    
+
     checkAuth()
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Vérifier l'authentification à chaque changement de route
   useEffect(() => {
+    const checkAuthOnRouteChange = () => {
+      try {
+        const userData = localStorage.getItem('user')
+
+        if (userData) {
+          const parsedUser = JSON.parse(userData)
+          setUser(parsedUser)
+          setIsLoggedIn(true)
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification de l\'authentification:', error)
+      }
+    }
+
+    checkAuthOnRouteChange()
     setIsMobileMenuOpen(false)
     setShowProfileMenu(false)
   }, [pathname])
@@ -127,10 +148,10 @@ export default function Header() {
 
   return (
     <header className={`fixed w-full z-50 transition-all duration-300 ${
-      isDashboard 
-        ? 'bg-[#006B3F]/95 backdrop-blur-sm shadow-lg py-2' 
-        : isScrolled 
-          ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' 
+      isDashboard
+        ? 'bg-[#006B3F]/95 backdrop-blur-sm shadow-lg py-2'
+        : isScrolled
+          ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2'
           : 'bg-[#FF8B7B]/90 py-4'
     }`}>
       <nav className="container mx-auto px-6">
@@ -138,7 +159,7 @@ export default function Header() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center group">
               <div className="relative w-14 h-14 mr-3">
-                <Image 
+                <Image
                   src="/images/logo.png"
                   alt="Fondation Horizons Nouveaux"
                   fill
@@ -156,23 +177,23 @@ export default function Header() {
               </div>
             </Link>
           </div>
-          
+
           {/* Navigation desktop */}
           <div className="hidden md:flex items-center space-x-8">
             {isDashboard ? (
               // Liens du dashboard
               <>
                 {dashboardLinks.map((item) => (
-                  <Link 
+                  <Link
                     key={item.path}
-                    href={item.path} 
+                    href={item.path}
                     className={`relative group text-white ${isActive(item.path) ? 'font-semibold' : ''}`}
                   >
                     <span>{item.name}</span>
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
                   </Link>
                 ))}
-                <Link 
+                <Link
                   href="/"
                   className="relative group text-white"
                 >
@@ -183,8 +204,8 @@ export default function Header() {
             ) : (
               // Navigation standard
               <>
-                <Link 
-                  href="/" 
+                <Link
+                  href="/"
                   className={`relative group ${
                     isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } ${isActive('/') ? 'font-semibold' : ''}`}
@@ -193,17 +214,20 @@ export default function Header() {
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
                 </Link>
                 {isLoggedIn && (
-                  <Link href="/dashboard" className={`relative group ${
-                    isScrolled ? 'text-[#006B3F]' : 'text-white'
-                  } ${isActive('/dashboard') ? 'font-semibold' : ''}`}>
+                  <Link 
+                    href="/dashboard" 
+                    className={`relative group ${
+                      isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    } ${isActive('/dashboard') ? 'font-semibold' : ''}`}
+                  >
                     <span>Tableau de bord</span>
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
                   </Link>
                 )}
                 {isLoggedIn && FORM_ITEMS.map((item) => (
-                  <Link 
+                  <Link
                     key={item.name}
-                    href={item.path} 
+                    href={item.path}
                     className={`relative group ${
                       isScrolled ? 'text-[#006B3F]' : 'text-white'
                     } ${isActive(item.path) ? 'font-semibold' : ''}`}
@@ -214,12 +238,12 @@ export default function Header() {
                 ))}
               </>
             )}
-            
+
             {/* Afficher le bouton de connexion ou le profil utilisateur */}
             {!isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <Link 
-                  href="/auth/login" 
+                <Link
+                  href="/auth/login"
                   className={`relative group ${
                     isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } ${isActive('/auth/login') ? 'font-semibold' : ''}`}
@@ -227,8 +251,8 @@ export default function Header() {
                   <span>Se connecter</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
                 </Link>
-                <Link 
-                  href="/auth/register" 
+                <Link
+                  href="/auth/register"
                   className="bg-[#006B3F] text-white px-6 py-2 rounded-full hover:bg-[#005535] transition-all duration-300 hover:scale-105 hover:shadow-lg"
                 >
                   S'inscrire
@@ -236,12 +260,12 @@ export default function Header() {
               </div>
             ) : (
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center space-x-2 focus:outline-none"
                 >
                   <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#FFE5A5]">
-                    <Image 
+                    <Image
                       src={user?.avatar || "/images/avatar-placeholder.jpg"}
                       alt="Photo de profil"
                       fill
@@ -252,30 +276,39 @@ export default function Header() {
                     {user?.prenom} {user?.nom}
                   </span>
                 </button>
-                
+
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 animate-fadeIn">
-                    <Link 
-                      href="/profile" 
+                    <Link
+                      href="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       Mon compte
                     </Link>
-                    <Link 
-                      href="/dossiers" 
+                    <Link
+                      href="/dossiers"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       Mes dossiers
                     </Link>
                     {!isDashboard && isLoggedIn && (
-                      <Link 
-                        href="/dashboard" 
+                      <Link
+                        href={user?.role === "ADMIN"
+                          ? "/dashboard/admin"
+                          : user?.role === "PARENT"
+                            ? "/dashboard/parent"
+                            : user?.role === "STAFF"
+                              ? "/dashboard/secretaire"
+                              : user?.role === "ANALYSTE"
+                                ? "/dashboard"
+                                : "/dashboard"
+                        }
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         Tableau de bord
                       </Link>
                     )}
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >
@@ -286,9 +319,9 @@ export default function Header() {
               </div>
             )}
           </div>
-          
+
           {/* Bouton menu mobile */}
-          <button 
+          <button
             className="md:hidden text-white"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Menu"
@@ -304,7 +337,7 @@ export default function Header() {
             )}
           </button>
         </div>
-        
+
         {/* Menu mobile */}
         {isMobileMenuOpen && (
           <nav className="md:hidden mt-4 pb-4 space-y-4 animate-fadeIn">
@@ -312,9 +345,9 @@ export default function Header() {
               // Menu mobile pour le dashboard
               <>
                 {dashboardLinks.map((item) => (
-                  <Link 
+                  <Link
                     key={item.path}
-                    href={item.path} 
+                    href={item.path}
                     className={`block py-2 text-white hover:text-[#FFE5A5] transition-colors ${
                       isActive(item.path) ? 'font-semibold' : ''
                     }`}
@@ -322,7 +355,7 @@ export default function Header() {
                     {item.name}
                   </Link>
                 ))}
-                <Link 
+                <Link
                   href="/"
                   className="block py-2 text-white hover:text-[#FFE5A5] transition-colors"
                 >
@@ -332,8 +365,8 @@ export default function Header() {
             ) : (
               // Menu mobile standard
               <>
-                <Link 
-                  href="/" 
+                <Link
+                  href="/"
                   className={`block py-2 ${
                     isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } hover:text-[#FFE5A5] transition-colors ${
@@ -343,8 +376,8 @@ export default function Header() {
                   Accueil
                 </Link>
                 {isLoggedIn && (
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href="/dashboard"
                     className={`block py-2 ${
                       isScrolled ? 'text-[#006B3F]' : 'text-white'
                     } hover:text-[#FFE5A5] transition-colors ${
@@ -355,9 +388,9 @@ export default function Header() {
                   </Link>
                 )}
                 {isLoggedIn && FORM_ITEMS.map((item) => (
-                  <Link 
+                  <Link
                     key={item.name}
-                    href={item.path} 
+                    href={item.path}
                     className={`block py-2 ${
                       isScrolled ? 'text-[#006B3F]' : 'text-white'
                     } hover:text-[#FFE5A5] transition-colors ${
@@ -369,12 +402,12 @@ export default function Header() {
                 ))}
               </>
             )}
-            
+
             {/* Afficher les options de connexion ou le profil utilisateur en mobile */}
             {!isLoggedIn ? (
               <>
-                <Link 
-                  href="/auth/login" 
+                <Link
+                  href="/auth/login"
                   className={`block py-2 ${
                     isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } hover:text-[#FFE5A5] transition-colors ${
@@ -383,8 +416,8 @@ export default function Header() {
                 >
                   Se connecter
                 </Link>
-                <Link 
-                  href="/auth/register" 
+                <Link
+                  href="/auth/register"
                   className="block bg-[#006B3F] text-white px-4 py-2 rounded-md hover:bg-[#005535] transition-colors text-center"
                 >
                   S'inscrire
@@ -394,8 +427,8 @@ export default function Header() {
               <>
                 <div className="flex items-center py-2">
                   <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#FFE5A5] mr-2">
-                    <Image 
-                      src={user?.avatar || "/images/avatar-placeholder.jpg"} 
+                    <Image
+                      src={user?.avatar || "/images/avatar-placeholder.jpg"}
                       alt="Photo de profil"
                       fill
                       className="object-cover"
@@ -405,16 +438,16 @@ export default function Header() {
                     {user?.prenom} {user?.nom}
                   </span>
                 </div>
-                <Link 
-                  href="/profile" 
+                <Link
+                  href="/profile"
                   className={`block py-2 pl-10 ${
                     isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } hover:text-[#FFE5A5] transition-colors`}
                 >
                   Mon compte
                 </Link>
-                <Link 
-                  href="/dossiers" 
+                <Link
+                  href="/dossiers"
                   className={`block py-2 pl-10 ${
                     isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } hover:text-[#FFE5A5] transition-colors`}
@@ -422,8 +455,17 @@ export default function Header() {
                   Mes dossiers
                 </Link>
                 {!isDashboard && isLoggedIn && (
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href={user?.role === "ADMIN"
+                      ? "/dashboard/admin"
+                      : user?.role === "PARENT"
+                        ? "/dashboard/parent"
+                        : user?.role === "STAFF"
+                          ? "/dashboard/secretaire"
+                          : user?.role === "ANALYSTE"
+                            ? "/dashboard"
+                            : "/dashboard"
+                    }
                     className={`block py-2 pl-10 ${
                       isScrolled ? 'text-[#006B3F]' : 'text-white'
                     } hover:text-[#FFE5A5] transition-colors`}
@@ -431,7 +473,7 @@ export default function Header() {
                     Tableau de bord
                   </Link>
                 )}
-                <button 
+                <button
                   onClick={handleLogout}
                   className={`block py-2 pl-10 text-left w-full ${
                     isDashboard ? 'text-red-300' : isScrolled ? 'text-red-600' : 'text-red-300'
