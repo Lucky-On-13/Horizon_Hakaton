@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useAssistant } from '@/contexts/AssistantContext'
 
 type Message = {
   id: string
@@ -18,7 +19,10 @@ type Message = {
 
 export default function ChatAssistant() {
   const router = useRouter()
-  const [isOpen, setIsOpen] = useState(false)
+  const { isOpen, closeAssistant, openAssistant, toggleAssistant } = useAssistant()
+  // Supprimez cette ligne car nous utilisons maintenant le contexte
+  // const [isOpen, setIsOpen] = useState(false)
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -40,7 +44,7 @@ export default function ChatAssistant() {
   // Fonction pour rediriger l'utilisateur vers une page
   const handleRedirect = (path: string) => {
     router.push(path)
-    setIsOpen(false) // Fermer le chat après la redirection
+    closeAssistant() // Utiliser closeAssistant du contexte au lieu de setIsOpen(false)
   }
 
   // Simuler une réponse de l'assistant avec contexte de conversation
@@ -295,9 +299,9 @@ export default function ChatAssistant() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Bouton de chat */}
+      {/* Bouton de chat - Nous avons besoin de ce bouton pour ouvrir l'assistant */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleAssistant}
         className={`flex items-center justify-center w-16 h-16 rounded-full bg-[#006B3F] text-white shadow-lg hover:bg-[#005535] transition-all duration-300 ${isOpen ? 'scale-0' : 'scale-100'}`}
         aria-label="Ouvrir l'assistant"
       >
@@ -310,6 +314,7 @@ export default function ChatAssistant() {
       <div className={`fixed bottom-0 right-0 w-full sm:w-96 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl transition-all duration-300 transform ${
         isOpen ? 'translate-y-0 sm:translate-y-0 sm:bottom-6 sm:right-6' : 'translate-y-full sm:translate-y-full'
       } overflow-hidden flex flex-col`} style={{ height: isOpen ? '500px' : '0' }}>
+        
         {/* En-tête */}
         <div className="bg-[#006B3F] text-white p-4 flex items-center justify-between">
           <div className="flex items-center">
@@ -327,7 +332,7 @@ export default function ChatAssistant() {
             </div>
           </div>
           <button 
-            onClick={() => setIsOpen(false)}
+            onClick={closeAssistant} // Utiliser closeAssistant du contexte
             className="text-white hover:text-[#FFE5A5] transition-colors"
             aria-label="Fermer"
           >

@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
- async function POST(
+export async function POST(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { text } = await request.json()
+    const { text, author } = await request.json()
     
     const commentaire = await prisma.commentaire.create({
       data: {
         text,
+        author, // Ce champ est requis selon votre schéma
         dossierId: parseInt(params.id),
-        dateCreation: new Date(),
+        // Utiliser les noms de champs corrects selon votre schéma
+        date: new Date(),
         dateModification: new Date()
       }
     })

@@ -1,39 +1,24 @@
 'use client'
-import { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, ReactNode } from 'react'
 
 type AssistantContextType = {
+  isOpen: boolean
   openAssistant: () => void
   closeAssistant: () => void
-  isAssistantOpen: boolean
-  sendMessage: (message: string) => void
+  toggleAssistant: () => void
 }
 
 const AssistantContext = createContext<AssistantContextType | undefined>(undefined)
 
 export function AssistantProvider({ children }: { children: ReactNode }) {
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
-  const openAssistant = () => {
-    setIsAssistantOpen(true)
-  }
-
-  const closeAssistant = () => {
-    setIsAssistantOpen(false)
-  }
-
-  const sendMessage = (message: string) => {
-    // Cette fonction sera implémentée pour communiquer avec le composant ChatAssistant
-    // Pour l'instant, on ouvre simplement l'assistant
-    setIsAssistantOpen(true)
-    
-    // Ici, vous pourriez utiliser un système d'événements ou un état global
-    // pour envoyer le message au composant ChatAssistant
-    const event = new CustomEvent('assistant-message', { detail: message })
-    window.dispatchEvent(event)
-  }
+  const openAssistant = () => setIsOpen(true)
+  const closeAssistant = () => setIsOpen(false)
+  const toggleAssistant = () => setIsOpen(prev => !prev)
 
   return (
-    <AssistantContext.Provider value={{ openAssistant, closeAssistant, isAssistantOpen, sendMessage }}>
+    <AssistantContext.Provider value={{ isOpen, openAssistant, closeAssistant, toggleAssistant }}>
       {children}
     </AssistantContext.Provider>
   )
@@ -42,7 +27,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
 export function useAssistant() {
   const context = useContext(AssistantContext)
   if (context === undefined) {
-    throw new Error('useAssistant must be used within an AssistantProvider')
+    throw new Error('useAssistant doit être utilisé à l\'intérieur d\'un AssistantProvider')
   }
   return context
 }
