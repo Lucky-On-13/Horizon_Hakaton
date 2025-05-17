@@ -44,23 +44,25 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="relative">
-              <div className="relative h-[500px] w-full">
-                <div className="absolute top-0 right-0 w-4/5 h-4/5">
+            <div className="relative w-full h-[500px] md:h-[600px] lg:h-[500px] mt-8 md:mt-0">
+              <div className="relative h-full w-full">
+                <div className="absolute top-0 right-0 w-4/5 h-4/5 overflow-hidden rounded-lg shadow-lg">
                   <Image
                     src="/images/hero-1.jpg"
                     alt="Portrait d'enfant"
                     fill
-                    className="object-cover rounded-lg"
+                    sizes="(max-width: 768px) 80vw, 50vw"
+                    className="object-cover"
                     priority
                   />
                 </div>
-                <div className="absolute bottom-0 left-0 w-2/3 h-3/4">
+                <div className="absolute bottom-0 left-0 w-2/3 h-3/4 overflow-hidden rounded-3xl shadow-lg">
                   <Image
                     src="/images/hero-2.jpg"
                     alt="Enfant souriant"
                     fill
-                    className="object-cover rounded-3xl"
+                    sizes="(max-width: 768px) 70vw, 40vw"
+                    className="object-cover"
                     priority
                   />
                 </div>
@@ -102,6 +104,7 @@ export default function Home() {
                   src="/images/mission.jpg"
                   alt="Notre mission"
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
               </div>
@@ -110,6 +113,7 @@ export default function Home() {
                   src="/images/mission-detail.jpg"
                   alt="Détail de notre mission"
                   fill
+                  sizes="(max-width: 768px) 30vw, 15vw"
                   className="object-cover"
                 />
               </div>
@@ -128,15 +132,17 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {[1, 2, 3, 4, 5, 6].map((num) => (
-              <div key={num} className="group relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
-                <div className="aspect-w-16 aspect-h-9 relative h-64">
+              <div key={num} className="group relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl h-[300px] sm:h-[250px] md:h-[300px]">
+                <div className="absolute inset-0 w-full h-full">
                   <Image
                     src={`/images/gallery-${num}.jpg`}
                     alt={`Image de galerie ${num}`}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    priority={num <= 2}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
@@ -144,6 +150,9 @@ export default function Home() {
                   <h3 className="text-xl font-bold">Activité {num}</h3>
                   <p className="text-sm text-white/80">Accompagnement et développement des jeunes</p>
                 </div>
+                <Link href={`/galerie/image-${num}`} className="absolute inset-0 z-10 cursor-pointer" aria-label={`Voir l'image ${num} en plein écran`}>
+                  <span className="sr-only">Voir en plein écran</span>
+                </Link>
               </div>
             ))}
           </div>
@@ -363,70 +372,3 @@ export default function Home() {
   )
 }
 // End of Home component
-
-      {/* Hero Section */}
-      <section className="relative h-screen min-h-[900px] max-h-[900px] bg-gray-50">
-        <div className="container mx-auto px-4 h-full flex items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-[#006B3F]"></div>
-                  <div className="w-8 h-8 rounded-full bg-[#FF8B7B]"></div>
-                  <div className="w-8 h-8 rounded-full bg-[#FFE5A5]"></div>
-                </div>
-                <span className="text-gray-600">+3000 enfants accompagnés</span>
-              </div>
-              
-              <h1 className="text-5xl md:text-6xl font-bold text-[#006B3F]">
-                Offrons à chaque enfant une chance de réussir !
-              </h1>
-              
-              <p className="text-xl text-gray-600">
-                Une solution digitale pensée pour faciliter le lien entre les familles et la Fondation Horizons Nouveaux dans le suivi des enfants en situation de handicap.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <AuthButton 
-                  href="/formulaires/wisi"
-                  className="bg-[#FF8B7B] text-white px-8 py-4 rounded-full text-lg hover:bg-[#FF7B6B] transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-semibold"
-                >
-                  Donation
-                </AuthButton>
-                <Link 
-                  href="/about"
-                  className="bg-[#006B3F] text-white px-8 py-4 rounded-full text-lg hover:bg-[#005535] transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-semibold"
-                >
-                  Soumettre un dossier
-                </Link>
-              </div>
-            </div>
-            
-            <div className="relative">
-              <div className="relative h-[500px] w-full">
-                <div className="absolute top-0 right-0 w-4/5 h-4/5">
-                  <Image
-                    src="/images/hero-1.jpg"
-                    alt="Portrait d'enfant"
-                    fill
-                    className="object-cover rounded-lg"
-                    priority
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 w-4/5 h-4/5">
-                  <Image
-                    src="/images/hero-2.jpg"
-                    alt="Enfant souriant"
-                    fill
-                    className="object-cover rounded-lg"
-                    priority
-                  />
-                </div>
-                <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-[#FF8B7B]"></div>
-                <div className="absolute -left-4 top-1/4 w-3 h-3 rounded-full bg-[#006B3F]"></div>
-                <div className="absolute -right-4 bottom-1/4 w-3 h-3 rounded-full bg-[#FFE5A5]"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
