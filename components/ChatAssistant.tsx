@@ -1,15 +1,23 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 type Message = {
   id: string
   content: string
   sender: 'user' | 'assistant'
   timestamp: Date
+  hasAction?: boolean
+  action?: {
+    type: 'redirect'
+    path: string
+    label: string
+  }
 }
 
 export default function ChatAssistant() {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -29,8 +37,14 @@ export default function ChatAssistant() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Fonction pour rediriger l'utilisateur vers une page
+  const handleRedirect = (path: string) => {
+    router.push(path)
+    setIsOpen(false) // Fermer le chat après la redirection
+  }
+
   // Simuler une réponse de l'assistant avec contexte de conversation
-  const getAssistantResponse = async (userMessage: string): Promise<string> => {
+  const getAssistantResponse = async (userMessage: string): Promise<Message> => {
     // Ajouter le message de l'utilisateur au contexte de la conversation
     const updatedContext = [...conversationContext, userMessage]
     setConversationContext(updatedContext)
@@ -41,118 +55,152 @@ export default function ChatAssistant() {
     // Logique avancée de réponse basée sur le contexte de la conversation
     const lowerCaseMessage = userMessage.toLowerCase()
     
-    // Réponses spécifiques à la Fondation
+    // Réponses spécifiques à la Fondation avec redirection
     if (lowerCaseMessage.includes('formulaire') && lowerCaseMessage.includes('wisi')) {
-      return "Le formulaire WISI est une évaluation complète des besoins de l'enfant. Vous pouvez y accéder depuis la page d'accueil ou directement via le menu en haut. Souhaitez-vous que je vous guide pour le remplir ?"
+      return {
+        id: Date.now().toString(),
+        content: "Le formulaire WISI est une évaluation complète des besoins de l'enfant. Vous pouvez y accéder depuis la page d'accueil ou directement via le menu en haut. Souhaitez-vous que je vous y dirige maintenant ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/formulaires/wisi',
+          label: 'Accéder au formulaire WISI'
+        }
+      }
     } else if (lowerCaseMessage.includes('formulaire') && lowerCaseMessage.includes('tarii')) {
-      return "Le formulaire TARII concerne le suivi médical et le développement personnel. Vous pouvez y accéder depuis la page d'accueil ou le menu principal. Puis-je vous aider avec une section spécifique ?"
+      return {
+        id: Date.now().toString(),
+        content: "Le formulaire TARII concerne le suivi médical et le développement personnel. Vous pouvez y accéder depuis la page d'accueil ou le menu principal. Puis-je vous y diriger maintenant ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/formulaires/tarii',
+          label: 'Accéder au formulaire TARII'
+        }
+      }
     } else if (lowerCaseMessage.includes('formulaire') && lowerCaseMessage.includes('fhn')) {
-      return "Le questionnaire FHN adopte une approche holistique pour comprendre les besoins de votre enfant. Vous pouvez le trouver sur notre page d'accueil ou via le menu. Avez-vous des questions sur son contenu ?"
+      return {
+        id: Date.now().toString(),
+        content: "Le questionnaire FHN adopte une approche holistique pour comprendre les besoins de votre enfant. Vous pouvez le trouver sur notre page d'accueil ou via le menu. Souhaitez-vous y accéder maintenant ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/formulaires/fhn',
+          label: 'Accéder au questionnaire FHN'
+        }
+      }
     } 
     
     // Réponses sur la fondation
     else if (lowerCaseMessage.includes('fondation') || lowerCaseMessage.includes('horizons nouveaux')) {
-      return "La Fondation Horizons Nouveaux est dédiée à l'accompagnement des enfants en situation de handicap au Gabon. Notre mission est de fournir un soutien personnalisé pour favoriser leur développement et leur inclusion. Souhaitez-vous en savoir plus sur nos programmes spécifiques ?"
+      return {
+        id: Date.now().toString(),
+        content: "La Fondation Horizons Nouveaux est dédiée à l'accompagnement des enfants en situation de handicap au Gabon. Notre mission est de fournir un soutien personnalisé pour favoriser leur développement et leur inclusion. Souhaitez-vous en savoir plus sur nos programmes spécifiques ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/about',
+          label: 'En savoir plus sur la fondation'
+        }
+      }
     }
     
     // Réponses sur les contacts
     else if (lowerCaseMessage.includes('contact') || lowerCaseMessage.includes('joindre')) {
-      return "Vous pouvez nous contacter par téléphone au +241 12 345 678, par email à contact@fondation-hn.org, ou en utilisant le formulaire de contact sur notre site. Souhaitez-vous que je vous aide à remplir ce formulaire ?"
+      return {
+        id: Date.now().toString(),
+        content: "Vous pouvez nous contacter par téléphone au +241 12 345 678, par email à contact@fondation-hn.org, ou en utilisant le formulaire de contact sur notre site. Souhaitez-vous accéder au formulaire de contact ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/contact',
+          label: 'Accéder au formulaire de contact'
+        }
+      }
     } 
     
     // Réponses sur l'inscription
     else if (lowerCaseMessage.includes('inscription') || lowerCaseMessage.includes('inscrire')) {
-      return "Pour inscrire votre enfant, vous devez d'abord créer un compte utilisateur, puis remplir le formulaire WISI. Souhaitez-vous commencer ce processus maintenant ?"
+      return {
+        id: Date.now().toString(),
+        content: "Pour inscrire votre enfant, vous devez d'abord créer un compte utilisateur, puis remplir le formulaire WISI. Souhaitez-vous commencer ce processus maintenant ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/auth/register/',
+          label: 'S\'inscrire maintenant'
+        }
+      }
     } 
     
     // Réponses sur la connexion
     else if (lowerCaseMessage.includes('connexion') || lowerCaseMessage.includes('connecter')) {
-      return "Vous pouvez vous connecter en cliquant sur 'Se connecter' en haut à droite de la page. Si vous n'avez pas encore de compte, vous devrez d'abord vous inscrire. Puis-je vous aider avec l'inscription ?"
+      return {
+        id: Date.now().toString(),
+        content: "Vous pouvez vous connecter en cliquant sur 'Se connecter' en haut à droite de la page. Si vous n'avez pas encore de compte, vous devrez d'abord vous inscrire. Souhaitez-vous vous connecter maintenant ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/auth/login/',
+          label: 'Se connecter'
+        }
+      }
     } 
     
     // Réponses de politesse
     else if (lowerCaseMessage.includes('merci') || lowerCaseMessage.includes('au revoir')) {
-      return "Je vous en prie ! N'hésitez pas à revenir si vous avez d'autres questions. Bonne journée !"
+      return {
+        id: Date.now().toString(),
+        content: "Je vous en prie ! N'hésitez pas à revenir si vous avez d'autres questions. Bonne journée !",
+        sender: 'assistant',
+        timestamp: new Date()
+      }
     } 
     
     // Réponses sur le handicap
     else if (lowerCaseMessage.includes('handicap') || lowerCaseMessage.includes('besoin spécial')) {
-      return "La Fondation Horizons Nouveaux accompagne les enfants présentant divers types de handicaps, notamment physiques, intellectuels, sensoriels et troubles du développement. Notre approche est personnalisée pour répondre aux besoins spécifiques de chaque enfant. Quel type d'accompagnement recherchez-vous ?"
+      return {
+        id: Date.now().toString(),
+        content: "La Fondation Horizons Nouveaux accompagne les enfants présentant divers types de handicaps, notamment physiques, intellectuels, sensoriels et troubles du développement. Notre approche est personnalisée pour répondre aux besoins spécifiques de chaque enfant. Quel type d'accompagnement recherchez-vous ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/services',
+          label: 'Découvrir nos services'
+        }
+      }
     }
     
     // Réponses sur les services
     else if (lowerCaseMessage.includes('service') || lowerCaseMessage.includes('programme')) {
-      return "Nous proposons plusieurs services, notamment : évaluations personnalisées, accompagnement éducatif, suivi médical, soutien psychologique, et activités de socialisation. Quel service vous intéresse particulièrement ?"
-    }
-    
-    // Réponses sur l'équipe
-    else if (lowerCaseMessage.includes('équipe') || lowerCaseMessage.includes('professionnel')) {
-      return "Notre équipe est composée de professionnels qualifiés dans divers domaines : médecins, psychologues, éducateurs spécialisés, orthophonistes, kinésithérapeutes et assistants sociaux. Tous sont formés pour accompagner les enfants en situation de handicap avec bienveillance et expertise."
-    }
-    
-    // Réponses générales sur la santé
-    else if (lowerCaseMessage.includes('santé') || lowerCaseMessage.includes('médical')) {
-      return "La santé et le bien-être des enfants sont au cœur de notre mission. Nous offrons un suivi médical régulier et adapté aux besoins spécifiques de chaque enfant. Avez-vous des questions sur un aspect particulier du suivi médical ?"
-    }
-    
-    // Réponses sur l'éducation
-    else if (lowerCaseMessage.includes('éducation') || lowerCaseMessage.includes('école')) {
-      return "Nous travaillons en étroite collaboration avec les établissements scolaires pour favoriser l'inclusion des enfants. Notre approche éducative est adaptée aux capacités et aux besoins de chaque enfant, avec pour objectif de développer leur autonomie et leurs compétences."
-    }
-    
-    // Réponses sur les activités
-    else if (lowerCaseMessage.includes('activité') || lowerCaseMessage.includes('loisir')) {
-      return "Nous organisons diverses activités adaptées : ateliers créatifs, activités sportives, sorties culturelles et événements de socialisation. Ces activités sont conçues pour favoriser le développement global et l'épanouissement des enfants."
-    }
-    
-    // Réponses sur les coûts
-    else if (lowerCaseMessage.includes('coût') || lowerCaseMessage.includes('prix') || lowerCaseMessage.includes('tarif')) {
-      return "La Fondation s'efforce de rendre ses services accessibles à tous. Certains services sont gratuits, d'autres peuvent être partiellement ou totalement pris en charge selon votre situation. N'hésitez pas à nous contacter pour discuter des options financières adaptées à votre situation."
-    }
-    
-    // Réponses sur l'âge
-    else if (lowerCaseMessage.includes('âge') || lowerCaseMessage.includes('enfant')) {
-      return "Nous accompagnons les enfants de 0 à 18 ans. Nos programmes sont adaptés aux différentes tranches d'âge et stades de développement. Quel est l'âge de l'enfant pour lequel vous recherchez des informations ?"
-    }
-    
-    // Réponses sur les témoignages
-    else if (lowerCaseMessage.includes('témoignage') || lowerCaseMessage.includes('avis')) {
-      return "De nombreuses familles ont partagé leur expérience positive avec notre fondation. Leurs témoignages soulignent l'impact significatif de notre accompagnement sur le développement et le bien-être de leurs enfants. Vous pouvez consulter certains de ces témoignages sur notre page d'accueil."
-    }
-    
-    // Réponses sur les partenaires
-    else if (lowerCaseMessage.includes('partenaire') || lowerCaseMessage.includes('collaboration')) {
-      return "Nous collaborons avec divers partenaires : établissements de santé, écoles, associations, entreprises et organismes gouvernementaux. Ces partenariats nous permettent d'offrir un accompagnement complet et de qualité aux enfants et à leurs familles."
-    }
-    
-    // Réponses sur les événements
-    else if (lowerCaseMessage.includes('événement') || lowerCaseMessage.includes('conférence')) {
-      return "Nous organisons régulièrement des événements : journées portes ouvertes, conférences sur le handicap, ateliers pour les parents et festivités pour les enfants. Consultez notre calendrier sur le site pour connaître les prochains événements."
-    }
-    
-    // Réponses sur le bénévolat
-    else if (lowerCaseMessage.includes('bénévole') || lowerCaseMessage.includes('volontaire')) {
-      return "Nous accueillons avec plaisir les bénévoles souhaitant contribuer à notre mission. Vous pouvez nous aider de diverses façons selon vos compétences et disponibilités. Contactez-nous pour en savoir plus sur les opportunités de bénévolat."
-    }
-    
-    // Réponses sur les dons
-    else if (lowerCaseMessage.includes('don') || lowerCaseMessage.includes('soutenir')) {
-      return "Votre soutien est précieux pour nous permettre de poursuivre notre mission. Vous pouvez faire un don financier, offrir du matériel ou partager votre expertise. Chaque contribution, quelle que soit sa nature ou son ampleur, fait une différence dans la vie des enfants que nous accompagnons."
-    }
-    
-    // Réponses sur la confidentialité
-    else if (lowerCaseMessage.includes('confidentialité') || lowerCaseMessage.includes('données')) {
-      return "Nous accordons une importance primordiale à la confidentialité et à la protection des données. Toutes les informations que vous nous confiez sont traitées avec la plus grande discrétion et sécurité, conformément aux réglementations en vigueur."
-    }
-    
-    // Réponses sur l'accessibilité
-    else if (lowerCaseMessage.includes('accessibilité') || lowerCaseMessage.includes('accès')) {
-      return "Nos locaux sont entièrement accessibles aux personnes à mobilité réduite. Nous veillons à ce que tous nos services et activités soient inclusifs et adaptés aux différents types de handicap."
-    }
-    
-    // Réponses générales
-    else if (lowerCaseMessage.includes('bonjour') || lowerCaseMessage.includes('salut')) {
-      return "Bonjour ! Je suis ravi de vous accueillir sur le site de la Fondation Horizons Nouveaux. Comment puis-je vous aider aujourd'hui ?"
+      return {
+        id: Date.now().toString(),
+        content: "Nous proposons plusieurs services, notamment : évaluations personnalisées, accompagnement éducatif, suivi médical, soutien psychologique, et activités de socialisation. Quel service vous intéresse particulièrement ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/services',
+          label: 'Voir tous nos services'
+        }
+      }
     }
     
     // Réponse par défaut avec analyse du contexte
@@ -162,15 +210,48 @@ export default function ChatAssistant() {
         const previousMessage = conversationContext[conversationContext.length - 2].toLowerCase();
         
         if (previousMessage.includes('formulaire')) {
-          return "Pour en savoir plus sur nos formulaires, vous pouvez consulter la section dédiée sur notre site. Nous proposons trois types de formulaires : WISI, TARII et FHN, chacun ayant un objectif spécifique dans notre processus d'accompagnement. Lequel vous intéresse particulièrement ?"
+          return {
+            id: Date.now().toString(),
+            content: "Pour en savoir plus sur nos formulaires, vous pouvez consulter la section dédiée sur notre site. Nous proposons trois types de formulaires : WISI, TARII et FHN, chacun ayant un objectif spécifique dans notre processus d'accompagnement. Lequel vous intéresse particulièrement ?",
+            sender: 'assistant',
+            timestamp: new Date(),
+            hasAction: true,
+            action: {
+              type: 'redirect',
+              path: '/formulaires',
+              label: 'Voir tous les formulaires'
+            }
+          }
         }
         
         if (previousMessage.includes('contact')) {
-          return "N'hésitez pas à nous contacter pour toute question supplémentaire. Notre équipe est disponible pour vous répondre et vous accompagner dans vos démarches."
+          return {
+            id: Date.now().toString(),
+            content: "N'hésitez pas à nous contacter pour toute question supplémentaire. Notre équipe est disponible pour vous répondre et vous accompagner dans vos démarches.",
+            sender: 'assistant',
+            timestamp: new Date(),
+            hasAction: true,
+            action: {
+              type: 'redirect',
+              path: '/contact',
+              label: 'Nous contacter'
+            }
+          }
         }
       }
       
-      return "Je ne suis pas sûr de comprendre votre demande. Je peux vous renseigner sur la Fondation Horizons Nouveaux, nos services d'accompagnement pour les enfants en situation de handicap, nos formulaires (WISI, TARII, FHN), ou vous aider avec le processus d'inscription. Comment puis-je vous être utile ?"
+      return {
+        id: Date.now().toString(),
+        content: "Je ne suis pas sûr de comprendre votre demande. Je peux vous renseigner sur la Fondation Horizons Nouveaux, nos services d'accompagnement pour les enfants en situation de handicap, nos formulaires (WISI, TARII, FHN), ou vous aider avec le processus d'inscription. Comment puis-je vous être utile ?",
+        sender: 'assistant',
+        timestamp: new Date(),
+        hasAction: true,
+        action: {
+          type: 'redirect',
+          path: '/',
+          label: 'Retour à l\'accueil'
+        }
+      }
     }
   }
 
@@ -194,14 +275,7 @@ export default function ChatAssistant() {
       const response = await getAssistantResponse(inputValue)
       
       // Ajouter la réponse de l'assistant
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: response,
-        sender: 'assistant',
-        timestamp: new Date()
-      }
-      
-      setMessages(prev => [...prev, assistantMessage])
+      setMessages(prev => [...prev, response])
     } catch (error) {
       console.error('Erreur lors de la génération de la réponse:', error)
       
@@ -282,6 +356,16 @@ export default function ChatAssistant() {
                   }`}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
+                  
+                  {/* Bouton d'action pour la redirection */}
+                  {message.hasAction && message.action && message.action.type === 'redirect' && (
+                    <button
+                      onClick={() => handleRedirect(message.action!.path)}
+                      className="mt-2 px-3 py-1.5 bg-[#FF8B7B] text-white text-sm rounded-lg hover:bg-[#FF7B6B] transition-colors w-full text-center font-medium"
+                    >
+                      {message.action.label}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
