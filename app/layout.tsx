@@ -5,7 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ChatAssistant from '@/components/ChatAssistant'
 import { AssistantProvider } from '@/contexts/AssistantContext'
-import {Toaster} from 'sonner';
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -29,6 +29,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <ChatAssistant />
+          <Toaster richColors position="top-center" />
         </AssistantProvider>
       </body>
     </html>

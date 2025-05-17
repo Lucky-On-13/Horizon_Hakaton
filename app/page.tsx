@@ -5,12 +5,12 @@ import AuthButton from '@/components/AuthButton'
 
 export default function Home() {
   return (
-    <div className="min-h-screen pt-24"> {/* Ajout du padding-top */}
+    <div className="min-h-screen pt-16 md:pt-24"> {/* Réduction du padding-top sur mobile */}
        {/* Hero Section */}
-       <section className="relative h-screen min-h-[100px] max-h-[900px] bg-gray-50">
+       <section className="relative py-12 md:py-0 min-h-[500px] md:h-screen md:min-h-[100px] md:max-h-[900px] bg-gray-50"> 
         <div className="container mx-auto px-4 h-full flex items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="space-y-4 md:space-y-8 mt-8 md:mt-0"> 
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   <div className="w-8 h-8 rounded-full bg-[#006B3F]"></div>
@@ -20,12 +20,12 @@ export default function Home() {
                 <span className="text-gray-600">+3000 enfants accompagnés</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl font-bold text-[#006B3F]">
-                Offrons à chaque enfant une chance de réussir !
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#006B3F]"> 
+                Offrons à chaque enfant une chance de réussir ! 
               </h1>
               
-              <p className="text-xl text-gray-600">
-                Une solution digitale pensée pour faciliter le lien entre les familles et la Fondation Horizons Nouveaux dans le suivi des enfants en situation de handicap.
+              <p className="text-lg md:text-xl text-gray-600"> 
+                Une solution digitale pensée pour faciliter le lien entre les familles et la Fondation Horizons Nouveaux dans le suivi des enfants en situation de handicap. 
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">

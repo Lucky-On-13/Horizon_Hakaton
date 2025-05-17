@@ -25,6 +25,31 @@ const FORM_ITEMS: MenuItem[] = [
   { name: 'FHN', path: '/formulaires/fhn' }
 ]
 
+// Liens du dashboard selon le rôle
+const DASHBOARD_LINKS: Record<string, MenuItem[]> = {
+  ADMIN: [
+    { name: 'Tableau de bord', path: '/dashboard' },
+    { name: 'Utilisateurs', path: '/dashboard/utilisateurs' },
+    { name: 'Dossiers', path: '/dashboard/dossiers' },
+    { name: 'Statistiques', path: '/dashboard/statistiques' }
+  ],
+  STAFF: [
+    { name: 'Tableau de bord', path: '/dashboard' },
+    { name: 'Dossiers', path: '/dashboard/dossiers' },
+    { name: 'Formulaires', path: '/dashboard/formulaires' }
+  ],
+  PARENT: [
+    { name: 'Tableau de bord', path: '/dashboard' },
+    { name: 'Mes dossiers', path: '/dashboard/mes-dossiers' },
+    { name: 'Mes formulaires', path: '/dashboard/mes-formulaires' }
+  ],
+  ANALYSTE: [
+    { name: 'Tableau de bord', path: '/dashboard' },
+    { name: 'Analyses', path: '/dashboard/analyses' },
+    { name: 'Rapports', path: '/dashboard/rapports' }
+  ]
+}
+
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -33,6 +58,7 @@ export default function Header() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const isDashboard = pathname.startsWith('/dashboard')
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,9 +117,21 @@ export default function Header() {
     }
   }
 
+  // Obtenir les liens du dashboard en fonction du rôle de l'utilisateur
+  const getDashboardLinks = () => {
+    if (!user || !user.role) return DASHBOARD_LINKS.PARENT;
+    return DASHBOARD_LINKS[user.role] || DASHBOARD_LINKS.PARENT;
+  }
+
+  const dashboardLinks = getDashboardLinks();
+
   return (
     <header className={`fixed w-full z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' : 'bg-[#FF8B7B]/90 py-4'
+      isDashboard 
+        ? 'bg-[#006B3F]/95 backdrop-blur-sm shadow-lg py-2' 
+        : isScrolled 
+          ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' 
+          : 'bg-[#FF8B7B]/90 py-4'
     }`}>
       <nav className="container mx-auto px-6">
         <div className="flex items-center justify-between">
@@ -109,43 +147,73 @@ export default function Header() {
                 />
               </div>
               <div>
-                <h1 className={`text-xl font-bold ${isScrolled ? 'text-[#006B3F]' : 'text-white'}`}>Fondation</h1>
-                <p className="text-xs text-[#FFE5A5]">Horizons Nouveaux</p>
+                <h1 className={`text-xl font-bold ${isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'}`}>
+                  {isDashboard ? 'Dashboard' : 'Fondation'}
+                </h1>
+                <p className="text-xs text-[#FFE5A5]">
+                  {isDashboard ? (user?.role || 'Utilisateur') : 'Horizons Nouveaux'}
+                </p>
               </div>
             </Link>
           </div>
           
           {/* Navigation desktop */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
-              className={`relative group ${
-                isScrolled ? 'text-[#006B3F]' : 'text-white'
-              } ${isActive('/') ? 'font-semibold' : ''}`}
-            >
-              <span>Accueil</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            {isLoggedIn && (
-              <Link href="/dashboard" className={`relative group ${
-                isScrolled ? 'text-[#006B3F]' : 'text-white'
-              } ${isActive('/dashboard') ? 'font-semibold' : ''}`}>
-                <span>Tableau de bord</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+            {isDashboard ? (
+              // Liens du dashboard
+              <>
+                {dashboardLinks.map((item) => (
+                  <Link 
+                    key={item.path}
+                    href={item.path} 
+                    className={`relative group text-white ${isActive(item.path) ? 'font-semibold' : ''}`}
+                  >
+                    <span>{item.name}</span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
+                  </Link>
+                ))}
+                <Link 
+                  href="/"
+                  className="relative group text-white"
+                >
+                  <span>Retour au site</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+              </>
+            ) : (
+              // Navigation standard
+              <>
+                <Link 
+                  href="/" 
+                  className={`relative group ${
+                    isScrolled ? 'text-[#006B3F]' : 'text-white'
+                  } ${isActive('/') ? 'font-semibold' : ''}`}
+                >
+                  <span>Accueil</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+                {isLoggedIn && (
+                  <Link href="/dashboard" className={`relative group ${
+                    isScrolled ? 'text-[#006B3F]' : 'text-white'
+                  } ${isActive('/dashboard') ? 'font-semibold' : ''}`}>
+                    <span>Tableau de bord</span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
+                  </Link>
+                )}
+                {isLoggedIn && FORM_ITEMS.map((item) => (
+                  <Link 
+                    key={item.name}
+                    href={item.path} 
+                    className={`relative group ${
+                      isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    } ${isActive(item.path) ? 'font-semibold' : ''}`}
+                  >
+                    <span>Formulaire {item.name}</span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
+                  </Link>
+                ))}
+              </>
             )}
-            {isLoggedIn && ['WISI', 'TARII', 'FHN'].map((item) => (
-              <Link 
-                key={item}
-                href={`/formulaires/${item.toLowerCase()}`} 
-                className={`relative group ${
-                  isScrolled ? 'text-[#006B3F]' : 'text-white'
-                } ${isActive(`/formulaires/${item.toLowerCase()}`) ? 'font-semibold' : ''}`}
-              >
-                <span>Formulaire {item}</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#FFE5A5] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-            ))}
             
             {/* Afficher le bouton de connexion ou le profil utilisateur */}
             {!isLoggedIn ? (
@@ -153,7 +221,7 @@ export default function Header() {
                 <Link 
                   href="/auth/login" 
                   className={`relative group ${
-                    isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } ${isActive('/auth/login') ? 'font-semibold' : ''}`}
                 >
                   <span>Se connecter</span>
@@ -180,7 +248,7 @@ export default function Header() {
                       className="object-cover"
                     />
                   </div>
-                  <span className={`${isScrolled ? 'text-[#006B3F]' : 'text-white'}`}>
+                  <span className={`${isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'}`}>
                     {user?.prenom} {user?.nom}
                   </span>
                 </button>
@@ -199,7 +267,14 @@ export default function Header() {
                     >
                       Mes dossiers
                     </Link>
-                    {/* Ajouter d'autres liens selon les besoins */}
+                    {!isDashboard && isLoggedIn && (
+                      <Link 
+                        href="/dashboard" 
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Tableau de bord
+                      </Link>
+                    )}
                     <button 
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
@@ -233,29 +308,67 @@ export default function Header() {
         {/* Menu mobile */}
         {isMobileMenuOpen && (
           <nav className="md:hidden mt-4 pb-4 space-y-4 animate-fadeIn">
-            <Link 
-              href="/" 
-              className={`block py-2 ${
-                isScrolled ? 'text-[#006B3F]' : 'text-white'
-              } hover:text-[#FFE5A5] transition-colors ${
-                isActive('/') ? 'font-semibold' : ''
-              }`}
-            >
-              Accueil
-            </Link>
-            {['WISI', 'TARII', 'FHN'].map((item) => (
-              <Link 
-                key={item}
-                href={`/formulaires/${item.toLowerCase()}`} 
-                className={`block py-2 ${
-                  isScrolled ? 'text-[#006B3F]' : 'text-white'
-                } hover:text-[#FFE5A5] transition-colors ${
-                  isActive(`/formulaires/${item.toLowerCase()}`) ? 'font-semibold' : ''
-                }`}
-              >
-                Formulaire {item}
-              </Link>
-            ))}
+            {isDashboard ? (
+              // Menu mobile pour le dashboard
+              <>
+                {dashboardLinks.map((item) => (
+                  <Link 
+                    key={item.path}
+                    href={item.path} 
+                    className={`block py-2 text-white hover:text-[#FFE5A5] transition-colors ${
+                      isActive(item.path) ? 'font-semibold' : ''
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                <Link 
+                  href="/"
+                  className="block py-2 text-white hover:text-[#FFE5A5] transition-colors"
+                >
+                  Retour au site
+                </Link>
+              </>
+            ) : (
+              // Menu mobile standard
+              <>
+                <Link 
+                  href="/" 
+                  className={`block py-2 ${
+                    isScrolled ? 'text-[#006B3F]' : 'text-white'
+                  } hover:text-[#FFE5A5] transition-colors ${
+                    isActive('/') ? 'font-semibold' : ''
+                  }`}
+                >
+                  Accueil
+                </Link>
+                {isLoggedIn && (
+                  <Link 
+                    href="/dashboard" 
+                    className={`block py-2 ${
+                      isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    } hover:text-[#FFE5A5] transition-colors ${
+                      isActive('/dashboard') ? 'font-semibold' : ''
+                    }`}
+                  >
+                    Tableau de bord
+                  </Link>
+                )}
+                {isLoggedIn && FORM_ITEMS.map((item) => (
+                  <Link 
+                    key={item.name}
+                    href={item.path} 
+                    className={`block py-2 ${
+                      isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    } hover:text-[#FFE5A5] transition-colors ${
+                      isActive(item.path) ? 'font-semibold' : ''
+                    }`}
+                  >
+                    Formulaire {item.name}
+                  </Link>
+                ))}
+              </>
+            )}
             
             {/* Afficher les options de connexion ou le profil utilisateur en mobile */}
             {!isLoggedIn ? (
@@ -263,7 +376,7 @@ export default function Header() {
                 <Link 
                   href="/auth/login" 
                   className={`block py-2 ${
-                    isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } hover:text-[#FFE5A5] transition-colors ${
                     isActive('/auth/login') ? 'font-semibold' : ''
                   }`}
@@ -282,20 +395,20 @@ export default function Header() {
                 <div className="flex items-center py-2">
                   <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#FFE5A5] mr-2">
                     <Image 
-                      src="/images/avatar-placeholder.jpg" 
+                      src={user?.avatar || "/images/avatar-placeholder.jpg"} 
                       alt="Photo de profil"
                       fill
                       className="object-cover"
                     />
                   </div>
-                  <span className={`${isScrolled ? 'text-[#006B3F]' : 'text-white'} font-semibold`}>
-                    Mon Profil
+                  <span className={`${isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'} font-semibold`}>
+                    {user?.prenom} {user?.nom}
                   </span>
                 </div>
                 <Link 
                   href="/profile" 
                   className={`block py-2 pl-10 ${
-                    isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } hover:text-[#FFE5A5] transition-colors`}
                 >
                   Mon compte
@@ -303,15 +416,25 @@ export default function Header() {
                 <Link 
                   href="/dossiers" 
                   className={`block py-2 pl-10 ${
-                    isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    isDashboard ? 'text-white' : isScrolled ? 'text-[#006B3F]' : 'text-white'
                   } hover:text-[#FFE5A5] transition-colors`}
                 >
                   Mes dossiers
                 </Link>
+                {!isDashboard && isLoggedIn && (
+                  <Link 
+                    href="/dashboard" 
+                    className={`block py-2 pl-10 ${
+                      isScrolled ? 'text-[#006B3F]' : 'text-white'
+                    } hover:text-[#FFE5A5] transition-colors`}
+                  >
+                    Tableau de bord
+                  </Link>
+                )}
                 <button 
                   onClick={handleLogout}
                   className={`block py-2 pl-10 text-left w-full ${
-                    isScrolled ? 'text-red-600' : 'text-red-300'
+                    isDashboard ? 'text-red-300' : isScrolled ? 'text-red-600' : 'text-red-300'
                   } hover:text-red-500 transition-colors`}
                 >
                   Se déconnecter

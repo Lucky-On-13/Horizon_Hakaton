@@ -5,15 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { fullSchema, loginSchema } from '@/server/schema'
+import { loginSchema } from '@/server/schema'
 import { connectUser } from '@/server/data'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
-
 export default function LoginPage() {
-  
-     const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
   })
 
@@ -24,60 +22,84 @@ export default function LoginPage() {
   const router = useRouter()
 
   const SignIn = async (data: { email: string; nom?: string; prenom?: string; telephone?: string; password: string }) => {
-    
-    if(!data.email || !data.password){
-      setError("Identifiants incorrectes veuillez reesayer");
+    if (!data.email || !data.password) {
+      setError("Identifiants incorrects, veuillez réessayer");
       setLoading(false);
-      return; 
+      return;
     }
-    try{
+    
+    try {
       setLoading(true);
       const con = await connectUser(data.email, data.password);
-      if(con.user?.password === data.password){
+      
+      if (con.user?.password === data.password) {
+        // Stocker les informations utilisateur dans localStorage
         localStorage.setItem('user', JSON.stringify({
-        id: con.user?.id,
-        nom: data.nom,
-        prenom: data.prenom,
-        email: data.email,
-      }))
-      const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    const result = await res.json();
-
-    if (result.success) {
-      toast.success('Connexion réussie');
-      router.push('/dashboard') 
-    } else {
-      setError(result.message || 'Identifiants incorrects')
-    }
-      
-    if(con.user?.role === "ADMIN")
-      router.push('/dashboard/admin') 
-    }
-    
-    if(con.user?.role === "PARENT"){
-      router.push('/dashboard/parent') 
-    }
-    if(con.user?.role === "STAFF"){
-      router.push('/dashboard/secretaire') 
-    }
-    if(con.user?.role === "ANALYSTE"){
-      router.push('/dashboard/') 
-    }
-    
-      
-        setError("Erreur d'identifiants");
-        return;
-    }
-    catch(e){
-            setError('Une erreur est survenue lors de la connexion')
-            console.error(e)
-    }
-    finally{
-        setLoading(false)
+          id: con.user?.id,
+          nom: con.user?.nom || data.nom,
+          prenom: con.user?.prenom || data.prenom,
+          email: data.email,
+          role: con.user?.role
+        }));
+        
+        // Appel API pour créer une session côté serveur
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          // Messages personnalisés selon le rôle
+          switch (con.user?.role) {
+            case "ADMIN":
+              toast.success('Connexion réussie. Bienvenue dans votre espace administrateur !', {
+                duration: 5000,
+                position: 'top-center',
+              });
+              setTimeout(() => router.push('/dashboard/admin'), 2000); // Augmenté à 2 secondes
+              break;
+            case "PARENT":
+              toast.success('Connexion réussie. Bienvenue dans votre espace parent !', {
+                duration: 5000,
+                position: 'top-center',
+              });
+              setTimeout(() => router.push('/dashboard/parent'), 1000);
+              break;
+            case "STAFF":
+              toast.success('Connexion réussie. Bienvenue dans votre espace secrétariat !', {
+                duration: 5000,
+                position: 'top-center',
+              });
+              setTimeout(() => router.push('/dashboard/secretaire'), 1000);
+              break;
+            case "ANALYSTE":
+              toast.success('Connexion réussie. Bienvenue dans votre espace d\'analyse !', {
+                duration: 5000,
+                position: 'top-center',
+              });
+              setTimeout(() => router.push('/dashboard'), 1000);
+              break;
+            default:
+              toast.success('Connexion réussie. Bienvenue dans votre espace personnel !', {
+                duration: 5000,
+                position: 'top-center',
+              });
+              setTimeout(() => router.push('/dashboard'), 1000);
+          }
+        } else {
+          setError(result.message || 'Identifiants incorrects');
+        }
+      } else {
+        setError("Identifiants incorrects");
+      }
+    } catch (e) {
+      setError('Une erreur est survenue lors de la connexion');
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -113,9 +135,7 @@ export default function LoginPage() {
               <label htmlFor="email" className="sr-only">Adresse email</label>
               <input
                 id="email"
-                {
-                  ...register('email')
-                }
+                {...register('email')}
                 type="email"
                 autoComplete="email"
                 required
@@ -130,9 +150,7 @@ export default function LoginPage() {
               <label htmlFor="password" className="sr-only">Mot de passe</label>
               <input
                 id="password"
-                {
-                  ...register('password')
-                }
+                {...register('password')}
                 type="password"
                 autoComplete="current-password"
                 required
@@ -141,15 +159,17 @@ export default function LoginPage() {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-[#006B3F] focus:border-[#006B3F] focus:z-10 sm:text-sm"
                 placeholder="Mot de passe"
               />
-              
             </div>
           </div>
-          <p className="mt-1 min-h-7 text-red-500 text-sm">
-                {errors.password?.message}
-              </p>
-              <p className="mt-1 min-h-7 text-red-500 text-sm">
-            {errors.email?.message}
-        </p>
+          
+          {errors.password?.message && (
+            <p className="mt-1 text-red-500 text-sm">{errors.password?.message}</p>
+          )}
+          
+          {errors.email?.message && (
+            <p className="mt-1 text-red-500 text-sm">{errors.email?.message}</p>
+          )}
+          
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -164,9 +184,9 @@ export default function LoginPage() {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-[#FF8B7B] hover:text-[#FF7B6B]">
+              <Link href="/auth/forgot-password" className="font-medium text-[#FF8B7B] hover:text-[#FF7B6B]">
                 Mot de passe oublié?
-              </a>
+              </Link>
             </div>
           </div>
 
